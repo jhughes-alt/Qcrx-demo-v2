@@ -1,0 +1,2793 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QCRx | Persona Gateway v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    [x-cloak] { display: none !important; }
+    :root {
+      color-scheme: light;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-alt: #F1F5F9;
+      --surface-muted: #E2E8F0;
+      --text: #0F172A;
+      --muted: #64748B;
+      --muted-2: #94A3B8;
+      --border: #E2E8F0;
+      --accent: #2563EB;
+      --accent-2: #0F766E;
+      --skeleton: #E2E8F0;
+      --skeleton-highlight: #F8FAFC;
+    }
+    html.dark {
+      color-scheme: dark;
+      --bg: #0B1120;
+      --surface: #0F172A;
+      --surface-alt: #111827;
+      --surface-muted: #1F2937;
+      --text: #E2E8F0;
+      --muted: #94A3B8;
+      --muted-2: #64748B;
+      --border: #1F2937;
+      --accent: #60A5FA;
+      --accent-2: #2DD4BF;
+      --skeleton: #1F2937;
+      --skeleton-highlight: #111827;
+    }
+    body { font-family: "Space Grotesk", system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+    body { background: var(--bg); color: var(--text); transition: background-color 0.2s ease, color 0.2s ease; }
+    .bg-white { background-color: var(--surface) !important; transition: background-color 0.2s ease; }
+    .bg-white\/90 { background-color: color-mix(in srgb, var(--surface), transparent 10%) !important; }
+    .bg-white\/80 { background-color: color-mix(in srgb, var(--surface), transparent 20%) !important; }
+    .bg-slate-50 { background-color: var(--surface-alt) !important; }
+    .bg-slate-100 { background-color: var(--surface-muted) !important; }
+    .bg-\[\#F8FAFC\] { background-color: var(--bg) !important; }
+    .bg-\[\#F1F5F9\] { background-color: var(--surface-alt) !important; }
+    .text-\[\#1E293B\], .text-\[\#0F172A\] { color: var(--text) !important; }
+    .text-\[\#64748B\], .text-slate-500 { color: var(--muted) !important; }
+    .text-\[\#94A3B8\], .text-slate-300, .text-slate-100 { color: var(--muted-2) !important; }
+    .border-slate-200, .border-slate-300, .border-slate-100 { border-color: var(--border) !important; }
+    .border-blue-200 { border-color: color-mix(in srgb, var(--accent), transparent 70%) !important; }
+    .bg-blue-50 { background-color: color-mix(in srgb, var(--accent), transparent 88%) !important; }
+    .bg-emerald-50 { background-color: color-mix(in srgb, #16A34A, transparent 88%) !important; }
+    .bg-amber-50 { background-color: color-mix(in srgb, #D97706, transparent 88%) !important; }
+    .bg-rose-50 { background-color: color-mix(in srgb, #DC2626, transparent 88%) !important; }
+    .text-blue-700 { color: color-mix(in srgb, var(--accent), black 10%) !important; }
+    .text-emerald-700 { color: color-mix(in srgb, #16A34A, black 12%) !important; }
+    .text-amber-700 { color: color-mix(in srgb, #D97706, black 12%) !important; }
+    .text-rose-700 { color: color-mix(in srgb, #DC2626, black 12%) !important; }
+    .skeleton { position: relative; overflow: hidden; background: var(--skeleton); border-radius: 0.75rem; }
+    .skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, var(--skeleton-highlight), transparent); animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tour-highlight { position: relative; z-index: 60; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 20%), 0 0 0 8px color-mix(in srgb, var(--accent), transparent 80%); border-radius: 0.75rem; }
+    .tour-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 50; pointer-events: none; }
+    .tour-tooltip { position: fixed; z-index: 70; max-width: 280px; pointer-events: auto; }
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 40; }
+    .sidebar-kicker { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.85rem; border-radius: 999px; border: 1px solid #CBD5F5; background: #E2E8F0; color: #0F172A; text-transform: uppercase; letter-spacing: 0.35em; font-size: 0.6rem; font-weight: 700; }
+    .sidebar-heading { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px solid #E2E8F0; background: #F8FAFC; color: #0F172A; text-transform: uppercase; letter-spacing: 0.28em; font-size: 0.62rem; font-weight: 700; }
+    .toggle-label { text-transform: uppercase; letter-spacing: 0.22em; font-size: 0.62rem; font-weight: 700; }
+    .pulse-green { animation: pulse-green 1.6s ease-in-out infinite; }
+    .pulse-red { animation: pulse-red 1.6s ease-in-out infinite; }
+    @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5); } 50% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); } }
+    @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); } 50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); } }
+    .risk-row { color: #1E293B; }
+    .risk-row .risk-muted { color: #64748B; }
+    /* v2 styles */
+    .inbox-badge { animation: inbox-pulse 1.4s ease-in-out infinite; }
+    @keyframes inbox-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); } 50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); } }
+    .v2-badge { background: linear-gradient(135deg, #2563EB, #0F766E); color: white; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 999px; }
+    .cycle-bar { height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; width: 80px; }
+    .cycle-bar-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-[#1E293B]" x-data="portalData()">
+  <div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.12),_transparent_60%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(20,184,166,0.12),_transparent_60%)]"></div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div x-show="notification" class="fixed top-6 right-6 z-50 bg-[#2563EB] text-white px-6 py-3 rounded-xl border border-blue-200 font-semibold" x-transition>
+    <span x-text="notification"></span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LOGIN GATEWAY
+  ═══════════════════════════════════════════════════════ -->
+  <section x-show="page === 'login'" class="min-h-screen flex items-center justify-center px-6" x-cloak>
+    <div class="max-w-5xl w-full grid md:grid-cols-[1.1fr_1.3fr] gap-10 items-center">
+      <div class="space-y-6">
+        <div class="flex items-center gap-3">
+          <div class="inline-flex items-center gap-3 bg-white px-4 py-2 rounded-full text-xs uppercase tracking-[0.35em] text-[#64748B] border border-slate-200">
+            Persona Gateway
+          </div>
+          <span class="v2-badge">v2</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-semibold leading-tight">QCRx MSO Operational Command</h1>
+        <p class="text-[#64748B] text-lg">The Unified Backbone for Chronic Disease Management. Synchronizing Pharmacist dispensing hardware with NP clinical oversight and automated revenue engines.</p>
+        <div class="flex flex-wrap gap-3 text-xs text-[#64748B]">
+          <span class="mono bg-white px-3 py-1 rounded-full border border-slate-200">CMS 2026 Audit Ready</span>
+          <span class="mono bg-white px-3 py-1 rounded-full border border-slate-200">Hashed/Verified Logs</span>
+          <span class="mono bg-white px-3 py-1 rounded-full border border-slate-200">RTM 98975 • 98977 • 98980</span>
+        </div>
+        <!-- v2 feature callout -->
+        <div class="bg-white border border-blue-100 rounded-xl p-4 text-xs space-y-2">
+          <p class="font-semibold text-[#2563EB] uppercase tracking-[0.2em]">v2 Enhancements</p>
+          <div class="grid grid-cols-2 gap-1 text-[#64748B]">
+            <span>📬 Engagement Inbox</span>
+            <span>🚪 Disenrollment Flow</span>
+            <span>📊 30-Day Cycle Progress</span>
+            <span>💬 Communication Log</span>
+            <span>📋 Batch CMS 1500 Export</span>
+            <span>📈 Revenue Actuals Overlay</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-8">
+        <h2 class="text-xl font-semibold mb-6">Select Persona</h2>
+        <div class="space-y-4">
+          <button @click="switchPersona('clinical')" class="w-full flex items-center justify-between px-5 py-4 rounded-xl bg-white border border-slate-200 hover:border-[#2563EB] transition">
+            <div>
+              <p class="font-semibold">Clinical (NP)</p>
+              <p class="text-xs text-[#64748B]">Patient Oversight &amp; Triage. Engagement inbox, disenrollment workflow, cycle progress, communication log.</p>
+            </div>
+            <span class="text-2xl text-[#0F172A]">🩺</span>
+          </button>
+          <button @click="switchPersona('pharmacy')" class="w-full flex items-center justify-between px-5 py-4 rounded-xl bg-white border border-slate-200 hover:border-[#2563EB] transition">
+            <div>
+              <p class="font-semibold">Pharmacy (Logistics)</p>
+              <p class="text-xs text-[#64748B]">Fulfillment &amp; Enrollment. Batch CMS 1500 export, GPS-verified delivery logistics.</p>
+            </div>
+            <span class="text-2xl text-[#0F172A]">💊</span>
+          </button>
+          <button @click="switchPersona('finance')" class="w-full flex items-center justify-between px-5 py-4 rounded-xl bg-white border border-slate-200 hover:border-[#2563EB] transition">
+            <div>
+              <p class="font-semibold">Finance (Strategy)</p>
+              <p class="text-xs text-[#64748B]">Growth &amp; Revenue Matrix. Actuals overlay, model vs. enrolled variance, staircase scaling.</p>
+            </div>
+            <span class="text-2xl text-[#0F172A]">📈</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CLINICAL TRIAGE SUITE
+  ═══════════════════════════════════════════════════════ -->
+  <section x-show="page === 'clinical'" x-cloak class="min-h-screen">
+    <nav class="sticky top-0 z-40 bg-white/90 border-b border-slate-200 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="font-semibold tracking-tight">QCRx <span class="text-[#2563EB]">Clinical Triage</span></div>
+          <span class="v2-badge">v2</span>
+        </div>
+        <div class="flex items-center gap-3 text-xs">
+          <div class="flex items-center gap-2 text-sm">
+            <button @click="switchPersona('clinical')" class="px-2 py-1 rounded-lg border" :class="page === 'clinical' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">🩺</button>
+            <button @click="switchPersona('pharmacy')" class="px-2 py-1 rounded-lg border" :class="page === 'pharmacy' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">💊</button>
+            <button @click="switchPersona('finance')" class="px-2 py-1 rounded-lg border" :class="page === 'finance' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">📈</button>
+          </div>
+          <!-- v2: Engagement Inbox Button -->
+          <button @click="showInbox = true" class="relative px-3 py-1 rounded-lg border border-slate-200 text-[#2563EB] font-semibold flex items-center gap-2">
+            📬 Inbox
+            <span x-show="urgentInboxCount() > 0" class="inbox-badge absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center" x-text="urgentInboxCount()"></span>
+          </button>
+          <button @click="startTour('clinical')" class="px-3 py-1 rounded-lg border border-slate-200 text-[#2563EB] font-semibold">? Help</button>
+          <button @click="toggleTheme()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">
+            <span x-text="isDark ? '☾ Dark' : '☀ Light'"></span>
+          </button>
+          <button @click="goToLogin()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Back</button>
+          <button @click="goToLogin()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Log Out</button>
+        </div>
+      </div>
+    </nav>
+    <main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <header class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="text-3xl font-semibold">Triage Queue</h2>
+          <p class="text-[#64748B]">Sorted by Risk Status. Red flags trigger at 16-day adherence deficits or symptom keywords.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button @click="showClinicalDrawer = true" class="lg:hidden px-3 py-2 rounded-lg border border-slate-200 text-xs text-[#64748B]">Open Sidebar</button>
+          <div class="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#64748B] bg-white border border-slate-200 rounded-full px-3 py-1">
+            <span>Sort</span>
+            <button @click="triageSort = 'risk'; setTriagePage(1)" class="px-2 py-1 rounded-full text-[10px] font-semibold" :class="triageSort === 'risk' ? 'bg-[#2563EB] text-white' : 'text-[#64748B]'">Risk</button>
+            <button @click="triageSort = 'adherence'; setTriagePage(1)" class="px-2 py-1 rounded-full text-[10px] font-semibold" :class="triageSort === 'adherence' ? 'bg-[#0F766E] text-white' : 'text-[#64748B]'">Adherence Deficit</button>
+            <button @click="triageSort = 'billing'; setTriagePage(1)" class="px-2 py-1 rounded-full text-[10px] font-semibold" :class="triageSort === 'billing' ? 'bg-amber-500 text-white' : 'text-[#64748B]'">Billing Readiness</button>
+          </div>
+          <div id="risk-badges" class="flex gap-2 text-xs mono" :class="tourHighlight === 'risk-badges' ? 'tour-highlight' : ''">
+            <span class="px-3 py-1 rounded-full bg-white text-rose-700 border border-rose-200">RED • immediate</span>
+            <span class="px-3 py-1 rounded-full bg-white text-amber-700 border border-amber-200">YELLOW • review</span>
+            <span class="px-3 py-1 rounded-full bg-white text-emerald-700 border border-emerald-200">GREEN • stable</span>
+          </div>
+          <button id="load-demo-button" @click="loadDemoPatients()" class="px-4 py-2 rounded-lg bg-[#2563EB] text-white text-xs font-semibold" :class="tourHighlight === 'load-demo-button' ? 'tour-highlight' : ''">Load Demo Patients</button>
+        </div>
+      </header>
+
+      <div class="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+        <div class="space-y-8">
+          <!-- Skeleton -->
+          <div x-show="isLoading" class="bg-[#ffffff] border border-[#E2E8F0] rounded-xl p-6 space-y-4" aria-hidden="true">
+            <div class="skeleton h-6 w-40"></div>
+            <div class="skeleton h-10 w-full"></div>
+            <div class="skeleton h-10 w-full"></div>
+            <div class="skeleton h-10 w-full"></div>
+          </div>
+          <!-- Empty State -->
+          <div x-show="!isLoading && triagePatients.length === 0" class="bg-[#ffffff] border border-[#E2E8F0] rounded-xl p-8 text-center">
+            <p class="text-sm uppercase tracking-[0.3em] text-[#64748B]">Triage Queue Empty</p>
+            <h3 class="text-2xl font-semibold mt-4">No patients in the queue yet.</h3>
+            <p class="text-sm text-[#64748B] mt-2">Load demo patients to populate risk statuses, adherence gaps, and billing readiness.</p>
+            <button @click="loadDemoPatients()" class="mt-5 px-5 py-2 rounded-lg bg-[#2563EB] text-white font-semibold">Load Demo Patients</button>
+          </div>
+          <!-- Triage Table -->
+          <div id="triage-queue" class="bg-[#ffffff] border border-[#E2E8F0] rounded-xl overflow-hidden" x-show="!isLoading && triagePatients.length" :class="tourHighlight === 'triage-queue' ? 'tour-highlight' : ''">
+            <div class="table-scroll">
+              <table class="w-full text-left min-w-[900px]">
+                <thead class="text-xs uppercase tracking-[0.25em] text-[#64748B] border-b border-[#E2E8F0] bg-[#F1F5F9] sticky top-0 z-10">
+                  <tr>
+                    <th class="px-6 py-4">Patient</th>
+                    <th class="px-6 py-4">Risk Status</th>
+                    <th class="px-6 py-4">Adherence Deficit</th>
+                    <th class="px-6 py-4">Days to Bill 98977</th>
+                    <!-- v2: Cycle Progress column -->
+                    <th class="px-6 py-4">Cycle Progress</th>
+                    <th class="px-6 py-4">Lifecycle Tracker</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[#E2E8F0]">
+                  <template x-for="p in paginatedPatients()" :key="p.id">
+                    <tr class="transition cursor-pointer border-l-4" :class="[riskRowClass(p), p.disenrolled ? 'opacity-60' : '']" @click="!p.disenrolled && openPatient(p)">
+                      <td class="px-6 py-5">
+                        <div class="font-semibold flex items-center gap-2">
+                          <span x-text="p.name"></span>
+                          <!-- v2: disenrolled badge -->
+                          <span x-show="p.disenrolled" class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-200 text-slate-600 border border-slate-300">Episode Closed</span>
+                        </div>
+                        <div class="text-xs risk-muted" x-text="'Last contact: ' + p.lastContact"></div>
+                      </td>
+                      <td class="px-6 py-5">
+                        <div class="flex flex-col gap-2">
+                          <span class="px-3 py-1 rounded-full text-xs font-semibold w-fit" :class="riskBadge(p)" x-text="p.riskStatus"></span>
+                          <span class="text-xs risk-muted" x-text="p.symptomKeywords.length ? 'Symptoms: ' + p.symptomKeywords.join(', ') : 'No symptom alerts'"></span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-5 text-sm">
+                        <div class="flex flex-col gap-2">
+                          <span x-text="p.adherenceDays + '/' + p.adherenceTarget + ' days'"></span>
+                          <span class="text-xs risk-muted" x-text="p.missedDoses ? (p.missedDoses + ' missed • last: ' + (p.lastMissed || '—')) : 'No missed doses'"></span>
+                          <span x-show="critical98977(p)" class="px-2 py-1 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 w-fit">Critical for 98977 Fulfillment</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-5 text-sm">
+                        <div class="flex flex-col gap-2">
+                          <span class="font-semibold" :class="is98977Urgent(p) ? 'text-rose-700' : 'text-[#1E293B]'" x-text="daysRemainingInCycle(p) + ' days'"></span>
+                          <span class="px-2 py-1 rounded-full text-[10px] font-semibold w-fit" :class="is98977Urgent(p) ? 'bg-rose-50 text-rose-700 border border-rose-200' : (needs98977(p) ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')" x-text="is98977Urgent(p) ? 'Under 2 days left' : (needs98977(p) ? 'Below 16-day threshold' : '98977 eligible')"></span>
+                        </div>
+                      </td>
+                      <!-- v2: Cycle Progress Bar -->
+                      <td class="px-6 py-5">
+                        <div class="flex flex-col gap-1">
+                          <span class="text-xs font-semibold" :class="cycleStatusColor(p)" x-text="cycleStatusLabel(p)"></span>
+                          <div class="cycle-bar">
+                            <div class="cycle-bar-fill" :class="cycleBarColor(p)" :style="'width: ' + Math.min(100, Math.round((p.adherenceDays / 30) * 100)) + '%'"></div>
+                          </div>
+                          <span class="text-[10px] text-[#64748B]" x-text="'Day ' + p.adherenceDays + ' of 30'"></span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-5">
+                        <div class="flex flex-wrap gap-2">
+                          <template x-for="stage in lifecycleStages(p)" :key="stage.label">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-semibold min-w-[80px] text-center" :class="stagePillClass(stage)" x-text="stage.label"></span>
+                          </template>
+                        </div>
+                      </td>
+                      <td class="px-6 py-5 text-right">
+                        <div class="flex flex-col items-end gap-2">
+                          <button @click.stop="!p.disenrolled && openPatient(p)" class="px-4 py-2 rounded-lg min-h-[40px] bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 disabled:opacity-40" :disabled="p.disenrolled">Action</button>
+                          <button @click.stop="openContactOverlay(p)" class="px-4 py-2 rounded-lg min-h-[40px] border-2 border-teal-600 text-teal-600 text-xs font-semibold hover:bg-teal-600/10" :disabled="p.disenrolled">Contact</button>
+                          <!-- v2: Close Episode button -->
+                          <button x-show="!p.disenrolled" @click.stop="openDisenrollModal(p)" class="px-4 py-2 rounded-lg min-h-[40px] border border-rose-300 text-rose-600 text-xs font-semibold hover:bg-rose-50">Close Episode</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-[#E2E8F0] bg-[#ffffff] text-sm">
+              <div class="text-xs text-[#64748B]">
+                <span x-text="'Showing ' + triagePageRange().start + '-' + triagePageRange().end + ' of ' + triagePageRange().total + ' patients'"></span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <button @click="prevTriagePage()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]" :class="triagePage === 1 ? 'opacity-40 cursor-not-allowed' : ''">Prev</button>
+                <span class="px-3 py-1 rounded-full bg-slate-100 text-[#0F172A]" x-text="triagePage + ' / ' + triageTotalPages()"></span>
+                <button @click="nextTriagePage()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]" :class="triagePage === triageTotalPages() ? 'opacity-40 cursor-not-allowed' : ''">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audit Vault -->
+          <div id="audit-vault" x-show="!isLoading" class="bg-white/80 border border-slate-200 rounded-xl p-6 backdrop-blur-md" :class="tourHighlight === 'audit-vault' ? 'tour-highlight' : ''">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-semibold">Compliance Audit Vault — Immutable Log</h3>
+                <p class="text-[#64748B] text-sm mt-1">All interactions are hashed and time-stamped for CMS audit readiness.</p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-semibold">🔒 Hashed/Verified</span>
+            </div>
+            <div class="mt-6 max-h-80 overflow-y-auto space-y-3">
+              <template x-for="entry in auditLogEntries(activePatient)" :key="entry.hashId + entry.timestamp">
+                <div class="border border-slate-200 rounded-xl p-4 bg-white">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="mono text-xs text-[#64748B]" x-text="entry.timestamp"></span>
+                    <span class="px-2 py-1 rounded-full text-[10px] font-semibold text-white" :class="entry.typeBadge" x-text="entry.icon + ' ' + entry.type"></span>
+                  </div>
+                  <p class="text-sm text-[#0F172A] mt-2" x-text="entry.description"></p>
+                  <p class="text-xs text-[#64748B] mono mt-2" x-text="truncateHash(entry.hashId)"></p>
+                </div>
+              </template>
+              <p x-show="!activePatient" class="text-sm text-[#64748B]">Select a patient to view immutable audit entries.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="hidden lg:block space-y-6 lg:sticky lg:top-24">
+          <div x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-5">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#2563EB]">Clinical Sidebar</p>
+            <h3 class="text-lg font-semibold mt-3">Active Patient</h3>
+            <div class="mt-3 space-y-2">
+              <template x-if="activePatient">
+                <div>
+                  <p class="font-semibold text-[#0F172A]" x-text="activePatient?.name"></p>
+                  <p class="text-xs text-[#64748B]" x-text="'ID: ' + activePatient?.id"></p>
+                  <p class="text-xs text-[#64748B]" x-text="'Risk: ' + riskStatus(activePatient).toUpperCase()"></p>
+                  <p class="text-xs text-[#64748B]" x-text="'Adherence: ' + activePatient.adherenceDays + ' days'"></p>
+                  <template x-if="activePatient">
+                    <span class="px-2 py-1 rounded-full text-[10px] font-semibold w-fit" :class="coinsuranceBadge(activePatient).class" x-text="coinsuranceBadge(activePatient).label"></span>
+                  </template>
+                </div>
+              </template>
+              <p x-show="!activePatient" class="text-sm text-[#64748B]">Select a patient from the queue to load the documentation view.</p>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs">
+              <button @click="activePatient && openPatient(activePatient)" class="px-3 py-2 rounded-lg bg-[#2563EB] text-white font-semibold" :class="activePatient ? '' : 'opacity-50 cursor-not-allowed'">Open Documentation</button>
+              <button @click="activePatient && toggleMonitoring(activePatient)" class="px-3 py-2 rounded-lg border border-slate-200" :class="activePatient ? '' : 'opacity-50 cursor-not-allowed'">Toggle Monitoring</button>
+            </div>
+          </div>
+
+          <div id="billing-readiness" x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-5" :class="tourHighlight === 'billing-readiness' ? 'tour-highlight' : ''">
+            <div class="flex items-center justify-between">
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Billing Readiness</p>
+              <span class="px-2 py-1 rounded-full text-[10px] font-semibold" :class="triagePatients.length === 0 ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'" x-text="triagePatients.length === 0 ? 'No Data' : (readyToBillCount() + ' Ready')"></span>
+            </div>
+            <div class="mt-4 space-y-3 text-sm">
+              <template x-for="patient in triagePatients.filter(p => billingReady(p) && !p.disenrolled).slice(0, 3)" :key="patient.id">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold" x-text="patient.name"></p>
+                    <p class="text-xs text-[#64748B]" x-text="patient.npMinutesLogged + ' mins logged'"></p>
+                  </div>
+                  <span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">READY</span>
+                </div>
+              </template>
+              <p x-show="triagePatients.length === 0" class="text-xs text-[#64748B]">No patients available yet.</p>
+              <p x-show="triagePatients.length > 0 && triagePatients.filter(p => billingReady(p)).length === 0" class="text-xs text-[#64748B]">No patients have met the 20-minute threshold.</p>
+            </div>
+          </div>
+
+          <div x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-5">
+            <div class="flex items-center justify-between">
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Adherence Watchlist</p>
+              <span class="px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-semibold" x-text="watchlistCount() + ' Critical'"></span>
+            </div>
+            <div class="mt-4 space-y-3 text-sm">
+              <template x-for="patient in triagePatients.filter(p => critical98977(p)).slice(0, 3)" :key="patient.id">
+                <div class="border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white">
+                  <p class="font-semibold" x-text="patient.name"></p>
+                  <p class="text-xs text-[#64748B] mt-1" x-text="patient.adherenceDays + '/' + patient.adherenceTarget + ' days logged'"></p>
+                  <div class="h-1 bg-slate-200 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full bg-amber-500" :style="'width: ' + Math.min(100, (patient.adherenceDays / patient.adherenceTarget) * 100) + '%'"></div>
+                  </div>
+                </div>
+              </template>
+              <p x-show="triagePatients.filter(p => critical98977(p)).length === 0" class="text-xs text-[#64748B]">No patients are within 1-2 days of 98977 fulfillment.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- Mobile Drawer -->
+    <div x-show="showClinicalDrawer" x-cloak class="fixed inset-0 z-50 lg:hidden">
+      <div class="drawer-overlay" @click="showClinicalDrawer = false"></div>
+      <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-white border-l border-slate-200 p-6 overflow-y-auto space-y-6">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Clinical Sidebar</h3>
+          <button @click="showClinicalDrawer = false" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5">
+          <p class="text-xs uppercase tracking-[0.3em] text-[#2563EB]">Active Patient</p>
+          <div class="mt-3 space-y-2">
+            <template x-if="activePatient">
+              <div>
+                <p class="font-semibold text-[#0F172A]" x-text="activePatient?.name"></p>
+                <p class="text-xs text-[#64748B]" x-text="'ID: ' + activePatient?.id"></p>
+              </div>
+            </template>
+            <p x-show="!activePatient" class="text-sm text-[#64748B]">Select a patient from the queue.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       PHARMACY FULFILLMENT PORTAL
+  ═══════════════════════════════════════════════════════ -->
+  <section x-show="page === 'pharmacy'" x-cloak class="min-h-screen">
+    <nav class="sticky top-0 z-40 bg-white/90 border-b border-slate-200 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="font-semibold tracking-tight">QCRx <span class="text-[#2563EB]">Pharmacy Logistics</span></div>
+          <span class="v2-badge">v2</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <div class="flex items-center gap-2 text-sm">
+            <button @click="switchPersona('clinical')" class="px-2 py-1 rounded-lg border" :class="page === 'clinical' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">🩺</button>
+            <button @click="switchPersona('pharmacy')" class="px-2 py-1 rounded-lg border" :class="page === 'pharmacy' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">💊</button>
+            <button @click="switchPersona('finance')" class="px-2 py-1 rounded-lg border" :class="page === 'finance' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">📈</button>
+          </div>
+          <button @click="startTour('pharmacy')" class="px-3 py-1 rounded-lg border border-slate-200 text-[#2563EB] font-semibold">? Help</button>
+          <button @click="toggleTheme()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">
+            <span x-text="isDark ? '☾ Dark' : '☀ Light'"></span>
+          </button>
+          <button @click="showEnrollModal = true" class="px-3 py-1 rounded-lg bg-[#2563EB] text-white font-semibold">+ New Enrollment</button>
+          <button @click="goToLogin()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Back</button>
+          <button @click="goToLogin()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Log Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <div class="grid md:grid-cols-[1.1fr_0.9fr] gap-6">
+        <div class="space-y-4">
+          <div x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-6" id="pharmacy-ledger" :class="tourHighlight === 'pharmacy-ledger' ? 'tour-highlight' : ''">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Active Deliveries</p>
+            <div class="mt-4 grid grid-cols-3 gap-4 text-center text-sm">
+              <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                <p class="text-xs text-[#64748B]">Pending</p>
+                <p class="text-xl font-semibold" x-text="deliverySummary().pending"></p>
+              </div>
+              <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                <p class="text-xs text-[#64748B]">In Transit</p>
+                <p class="text-xl font-semibold" x-text="deliverySummary().inTransit"></p>
+              </div>
+              <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                <p class="text-xs text-[#64748B]">Completed</p>
+                <p class="text-xl font-semibold" x-text="deliverySummary().completed"></p>
+              </div>
+            </div>
+          </div>
+          <div x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-6" id="logistics-ledger" :class="tourHighlight === 'logistics-ledger' ? 'tour-highlight' : ''">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Logistics Ledger</p>
+            <div class="flex items-end justify-between mt-4">
+              <div>
+                <p class="text-4xl font-semibold text-[#0F172A]" x-text="'$' + logisticsCredits().toLocaleString('en-US', {minimumFractionDigits: 2})"></p>
+                <p class="text-sm text-[#64748B]" x-text="formatCurrency(finance.pharmacyReimbursementRate) + ' per GPS-verified delivery'"></p>
+              </div>
+              <div class="text-xs text-[#64748B] mono">Month-to-date</div>
+            </div>
+          </div>
+        </div>
+        <div x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-6">
+          <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Audit-Trail Sync</p>
+          <div class="mt-4 space-y-3">
+            <template x-for="audit in auditTrail" :key="audit.batchId">
+              <div class="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white">
+                <div>
+                  <p class="font-semibold" x-text="audit.batchId"></p>
+                  <p class="text-xs text-[#64748B]" x-text="audit.monitoringId"></p>
+                </div>
+                <span class="text-[#0F766E] text-xs font-semibold">Hashed/Verified</span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk Intake -->
+      <div id="bulk-intake" x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-6" :class="tourHighlight === 'bulk-intake' ? 'tour-highlight' : ''">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Bulk Patient Intake</p>
+            <p class="text-sm text-[#64748B] mt-2">Upload CSV/Excel files with headers: <span class="mono text-[#1E293B]">patient_full_name</span>, <span class="mono text-[#1E293B]">date_of_birth</span>, <span class="mono text-[#1E293B]">primary_diagnosis_code</span>, <span class="mono text-[#1E293B]">pharmacy_npi_id</span>, <span class="mono text-[#1E293B]">monitoring_device_id</span>.</p>
+          </div>
+          <button @click="openBulkModal()" class="px-4 py-2 rounded-lg bg-[#2563EB] text-white font-semibold">Bulk Patient Intake</button>
+        </div>
+        <div class="mt-5">
+          <div class="flex items-center justify-between text-xs text-[#64748B] mono">
+            <span>Verifying Hashed Records</span>
+            <span x-text="bulkUpload.progress + '%'"></span>
+          </div>
+          <div class="h-2 bg-slate-200 rounded-full mt-2 overflow-hidden">
+            <div class="h-full bg-[#0F766E]" :class="bulkUpload.progress < 100 ? 'animate-pulse' : ''" :style="'width: ' + bulkUpload.progress + '%'"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- v2: Batch CMS 1500 Export Panel -->
+      <div id="batch-cms-export" x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl p-6" :class="tourHighlight === 'batch-cms-export' ? 'tour-highlight' : ''">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Batch CMS 1500 Export</p>
+              <span class="v2-badge">v2</span>
+            </div>
+            <p class="text-sm text-[#64748B] mt-2">Generate a billing-ready CSV for all READY patients. Includes 98975, 98977, 98980 codes. Disenrolled patients excluded.</p>
+            <p class="text-xs text-[#64748B] mt-1" x-text="triagePatients.filter(p => billingReady(p) && !p.disenrolled).length + ' patients READY to export'"></p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button @click="previewBatchExport()" class="px-4 py-2 rounded-lg border border-[#2563EB] text-[#2563EB] text-xs font-semibold hover:bg-blue-50">Preview Batch</button>
+            <button @click="downloadBatchCMS1500()" class="px-4 py-2 rounded-lg bg-[#0F766E] text-white text-xs font-semibold hover:bg-teal-800">Download Batch CMS 1500</button>
+          </div>
+        </div>
+        <!-- Batch preview table -->
+        <div x-show="showBatchPreview" class="mt-6 border border-slate-200 rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 bg-[#F1F5F9] border-b border-slate-200">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Batch Preview</p>
+            <div class="flex items-center gap-4 text-xs">
+              <span class="text-[#64748B]">Est. Total: <span class="font-semibold text-[#0F172A]" x-text="formatCurrency(batchEstimatedTotal())"></span></span>
+              <button @click="showBatchPreview = false" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="w-full text-left text-xs min-w-[700px]">
+              <thead class="bg-[#F8FAFC] text-[#64748B] uppercase tracking-[0.2em]">
+                <tr>
+                  <th class="px-4 py-3">Patient</th>
+                  <th class="px-4 py-3">DOB</th>
+                  <th class="px-4 py-3">ICD-10</th>
+                  <th class="px-4 py-3">CPT</th>
+                  <th class="px-4 py-3">DOS</th>
+                  <th class="px-4 py-3 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                <template x-for="row in batchExportRows()" :key="row.patientId + row.cpt">
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="px-4 py-3" x-text="row.patientName"></td>
+                    <td class="px-4 py-3" x-text="row.dob"></td>
+                    <td class="px-4 py-3 mono" x-text="row.icd10"></td>
+                    <td class="px-4 py-3 mono font-semibold" x-text="row.cpt"></td>
+                    <td class="px-4 py-3" x-text="row.dos"></td>
+                    <td class="px-4 py-3 text-right font-semibold" x-text="formatCurrency(row.amount)"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPS Verification Queue -->
+      <div x-show="!isLoading" class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+          <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">GPS Verification Queue</p>
+          <button id="gps-verify-button" @click="pharmacyPatients.length ? launchDeliveryVerification(pharmacyPatients[0]) : notify('No deliveries available yet.')" class="px-3 py-1 rounded-lg border border-slate-200 text-xs text-[#2563EB] font-semibold" :class="tourHighlight === 'gps-verify-button' ? 'tour-highlight' : ''">GPS Verify</button>
+        </div>
+        <div class="table-scroll" id="gps-verify" :class="tourHighlight === 'gps-verify' ? 'tour-highlight' : ''">
+          <table class="w-full text-left min-w-[860px]">
+            <thead class="text-xs uppercase tracking-[0.25em] text-[#64748B] border-b border-slate-200 bg-[#F1F5F9] sticky top-0 z-10">
+              <tr>
+                <th class="px-6 py-4">Patient</th>
+                <th class="px-6 py-4">Diagnosis</th>
+                <th class="px-6 py-4">Delivery Status</th>
+                <th class="px-6 py-4">GPS Verification</th>
+                <th class="px-6 py-4 text-right">Credit</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              <template x-for="p in pharmacyPatients" :key="p.id">
+                <tr class="odd:bg-slate-50 even:bg-white">
+                  <td class="px-6 py-5">
+                    <div class="font-semibold" x-text="p.name"></div>
+                    <div class="text-xs text-[#64748B]" x-text="p.rxSafeBatch"></div>
+                  </td>
+                  <td class="px-6 py-5 text-sm" x-text="p.diagnosis"></td>
+                  <td class="px-6 py-5 text-sm">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-semibold" :class="deliveryStatusBadge(p).class" x-text="deliveryStatusBadge(p).label"></span>
+                  </td>
+                  <td class="px-6 py-5 text-sm">
+                    <button @click="launchDeliveryVerification(p)" class="px-3 py-1 rounded-lg text-xs font-semibold" :class="p.gpsVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200'">
+                      <span x-text="p.gpsVerified ? 'Verified' : 'Verify GPS'"></span>
+                    </button>
+                  </td>
+                  <td class="px-6 py-5 text-right text-sm font-semibold" x-text="p.gpsVerified ? formatCurrency(finance.pharmacyReimbursementRate) : '$0.00'"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FINANCE / STRATEGY MATRIX
+  ═══════════════════════════════════════════════════════ -->
+  <section x-show="page === 'finance'" x-cloak class="min-h-screen">
+    <nav class="sticky top-0 z-40 bg-white/90 border-b border-slate-200 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="font-semibold tracking-tight">QCRx <span class="text-[#2563EB]">Finance Matrix</span></div>
+          <span class="v2-badge">v2</span>
+        </div>
+        <div class="flex items-center gap-3 text-xs">
+          <div class="flex items-center gap-2 text-sm">
+            <button @click="switchPersona('clinical')" class="px-2 py-1 rounded-lg border" :class="page === 'clinical' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">🩺</button>
+            <button @click="switchPersona('pharmacy')" class="px-2 py-1 rounded-lg border" :class="page === 'pharmacy' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">💊</button>
+            <button @click="switchPersona('finance')" class="px-2 py-1 rounded-lg border" :class="page === 'finance' ? 'border-blue-200 bg-blue-50 text-[#2563EB] font-semibold' : 'border-slate-200 text-slate-500'">📈</button>
+          </div>
+          <button @click="startTour('finance')" class="px-3 py-1 rounded-lg border border-slate-200 text-[#2563EB] font-semibold">? Help</button>
+          <button @click="toggleTheme()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">
+            <span x-text="isDark ? '☾ Dark' : '☀ Light'"></span>
+          </button>
+          <button @click="goToLogin()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Back</button>
+          <button @click="goToLogin()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Log Out</button>
+        </div>
+      </div>
+    </nav>
+    <main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <div class="bg-white/80 border border-slate-200 rounded-xl p-8 backdrop-blur-md">
+        <div class="flex flex-wrap justify-between gap-6">
+          <div>
+            <h2 class="text-3xl font-semibold">Revenue Matrix Modeler</h2>
+            <p class="text-[#64748B]">Model revenue stack with staircase growth and contracted NP labor.</p>
+            <p class="text-xs text-[#64748B] mt-2">Revenue assumes 16+ days of data transmission (98977) and 20 minutes of interactive communication (98980).</p>
+          </div>
+          <div class="text-xs text-[#64748B] mono">Staircase: +2 pharmacies/mo (Y1), +5/mo (Y2)</div>
+        </div>
+
+        <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-8 mt-8 lg:items-start">
+          <!-- Left: Sliders -->
+          <div id="finance-modeler" class="space-y-6 lg:max-h-[calc(100vh-260px)] lg:overflow-auto lg:pr-2" :class="tourHighlight === 'finance-modeler' ? 'tour-highlight' : ''">
+            <div>
+              <label class="flex justify-between text-xs uppercase tracking-[0.3em] text-[#64748B]">Starting Pharmacies <span x-text="finance.startPharmacies"></span></label>
+              <div class="flex items-center gap-3 mt-3">
+                <input type="range" min="1" max="50" step="1" x-model.number="finance.startPharmacies" class="w-full accent-[#2563EB]">
+                <input type="number" min="1" max="50" step="1" x-model.number="finance.startPharmacies" class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="flex justify-between text-xs uppercase tracking-[0.3em] text-[#64748B]">Patients per Pharmacy <span x-text="finance.patientsPerPharmacy"></span></label>
+              <div class="flex items-center gap-3 mt-3">
+                <input type="range" min="20" max="500" step="10" x-model.number="finance.patientsPerPharmacy" class="w-full accent-[#2563EB]">
+                <input type="number" min="20" max="500" step="10" x-model.number="finance.patientsPerPharmacy" class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="flex justify-between text-xs uppercase tracking-[0.3em] text-[#64748B]">Monthly NP Cost <span x-text="formatCurrency(finance.npMonthlyCost)"></span></label>
+              <div class="flex items-center gap-3 mt-3">
+                <input type="range" min="6000" max="20000" step="250" x-model.number="finance.npMonthlyCost" class="w-full accent-[#2563EB]">
+                <input type="number" min="6000" max="20000" step="250" x-model.number="finance.npMonthlyCost" class="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="flex justify-between text-xs uppercase tracking-[0.3em] text-[#64748B]">Pharmacy Cost-Reimbursement Rate <span x-text="formatCurrency(finance.pharmacyReimbursementRate)"></span></label>
+              <div class="flex items-center gap-3 mt-3">
+                <input type="range" min="10" max="80" step="1" x-model.number="finance.pharmacyReimbursementRate" class="w-full accent-[#2563EB]">
+                <input type="number" min="10" max="80" step="1" x-model.number="finance.pharmacyReimbursementRate" class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm">
+              </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-white">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs uppercase tracking-[0.3em] text-[#2563EB]">Enable 2026 Revenue Recovery</p>
+                  <p class="text-xs text-[#64748B] mt-2">Adds a 15% lift to total revenue to capture partial adherence (98985) + partial management (98979).</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" x-model="finance.enableRecovery" class="sr-only peer">
+                  <div class="w-12 h-6 bg-slate-200 rounded-full peer-checked:bg-emerald-500 transition"></div>
+                  <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition peer-checked:translate-x-6"></span>
+                </label>
+              </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-5 bg-slate-50">
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">2026 Static Reference Labels</p>
+              <div class="mt-4 space-y-4 text-sm">
+                <div class="flex items-center justify-between">
+                  <div><p class="font-semibold">98975 Setup Rate</p><p class="text-xs text-[#64748B]">One-time</p></div>
+                  <span class="text-lg font-semibold" x-text="formatCurrency(finance.rate98975)"></span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div><p class="font-semibold">98977 Device Supply</p><p class="text-xs text-[#64748B]">Monthly average (30-day cycle)</p></div>
+                  <span class="text-lg font-semibold" x-text="formatCurrency(finance.rate98977)"></span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div><p class="font-semibold">98980 Management</p><p class="text-xs text-[#64748B]">Monthly</p></div>
+                  <span class="text-lg font-semibold" x-text="formatCurrency(finance.rate98980)"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Outputs + Chart -->
+          <div class="space-y-6 lg:max-h-[calc(100vh-260px)] lg:overflow-auto lg:pr-2" x-effect="!isLoading && updateRevenueChart()">
+            <!-- NP Workload -->
+            <div class="border border-slate-200 rounded-xl p-5 bg-white">
+              <div class="flex items-center justify-between">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">NP Workload Assumptions</p>
+                <span class="text-[11px] text-[#94A3B8] mono" x-text="totalRiskMix() + '% total'"></span>
+              </div>
+              <div class="mt-4 space-y-5">
+                <div>
+                  <div class="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-[#64748B]">
+                    <span>Risk Mix</span>
+                    <span class="text-[11px]" x-text="finance.riskMix.red + '% / ' + finance.riskMix.yellow + '% / ' + finance.riskMix.green + '%'"></span>
+                  </div>
+                  <div class="mt-3 h-3 w-full rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex">
+                    <div class="bg-rose-500" :style="'width:' + finance.riskMix.red + '%'"></div>
+                    <div class="bg-amber-400" :style="'width:' + finance.riskMix.yellow + '%'"></div>
+                    <div class="bg-emerald-500" :style="'width:' + finance.riskMix.green + '%'"></div>
+                  </div>
+                  <div class="mt-4 space-y-3 text-sm">
+                    <div>
+                      <div class="flex items-center justify-between text-xs"><span class="font-semibold text-rose-700">% RED patients</span><span x-text="finance.riskMix.red + '%'"></span></div>
+                      <div class="flex items-center gap-3 mt-2">
+                        <input type="range" min="0" max="100" step="1" x-model.number="finance.riskMix.red" @input="normalizeRiskMix('red')" class="w-full accent-rose-500">
+                        <input type="number" min="0" max="100" step="1" x-model.number="finance.riskMix.red" @input="normalizeRiskMix('red')" class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex items-center justify-between text-xs"><span class="font-semibold text-amber-700">% YELLOW patients</span><span x-text="finance.riskMix.yellow + '%'"></span></div>
+                      <div class="flex items-center gap-3 mt-2">
+                        <input type="range" min="0" max="100" step="1" x-model.number="finance.riskMix.yellow" @input="normalizeRiskMix('yellow')" class="w-full accent-amber-400">
+                        <input type="number" min="0" max="100" step="1" x-model.number="finance.riskMix.yellow" @input="normalizeRiskMix('yellow')" class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex items-center justify-between text-xs"><span class="font-semibold text-emerald-700">% GREEN patients</span><span x-text="finance.riskMix.green + '%'"></span></div>
+                      <div class="flex items-center gap-3 mt-2">
+                        <input type="range" min="0" max="100" step="1" x-model.number="finance.riskMix.green" @input="normalizeRiskMix('green')" class="w-full accent-emerald-500">
+                        <input type="number" min="0" max="100" step="1" x-model.number="finance.riskMix.green" @input="normalizeRiskMix('green')" class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Minutes per patient by risk tier</p>
+                  <div class="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
+                    <div class="border border-rose-200 rounded-lg p-3 bg-rose-50">
+                      <p class="text-xs font-semibold text-rose-700">RED</p>
+                      <div class="flex items-center gap-2 mt-2">
+                        <input type="number" min="1" max="120" step="1" x-model.number="finance.riskMinutes.red" class="w-full bg-white border border-rose-200 rounded-lg px-2 py-1 text-sm">
+                        <span class="text-xs text-rose-700">min</span>
+                      </div>
+                    </div>
+                    <div class="border border-amber-200 rounded-lg p-3 bg-amber-50">
+                      <p class="text-xs font-semibold text-amber-700">YELLOW</p>
+                      <div class="flex items-center gap-2 mt-2">
+                        <input type="number" min="1" max="120" step="1" x-model.number="finance.riskMinutes.yellow" class="w-full bg-white border border-amber-200 rounded-lg px-2 py-1 text-sm">
+                        <span class="text-xs text-amber-700">min</span>
+                      </div>
+                    </div>
+                    <div class="border border-emerald-200 rounded-lg p-3 bg-emerald-50">
+                      <p class="text-xs font-semibold text-emerald-700">GREEN</p>
+                      <div class="flex items-center gap-2 mt-2">
+                        <input type="number" min="1" max="120" step="1" x-model.number="finance.riskMinutes.green" class="w-full bg-white border border-emerald-200 rounded-lg px-2 py-1 text-sm">
+                        <span class="text-xs text-emerald-700">min</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                  <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Blended Avg Minutes per Patient</p>
+                  <p class="text-lg font-semibold mt-2" x-text="blendedAvgMinutes().toFixed(1) + ' min'"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Finance Output Cards -->
+            <div x-show="!isLoading" id="finance-output" class="grid md:grid-cols-2 gap-6" :class="tourHighlight === 'finance-output' ? 'tour-highlight' : ''">
+              <div class="bg-white border border-slate-200 rounded-xl p-5">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Revenue Stack</p>
+                <p class="text-sm mt-3">One-Time Onboarding (98975)</p>
+                <p class="text-lg font-semibold" x-text="formatCurrency(finance.rate98975)"></p>
+                <p class="text-sm mt-3">Avg Monthly (98977 + 98980)</p>
+                <p class="text-lg font-semibold" x-text="formatCurrency(monthlyRecurringPerPatient())"></p>
+              </div>
+              <div class="bg-white border border-slate-200 rounded-xl p-5">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">NP Capacity</p>
+                <div class="mt-4 space-y-3 text-sm">
+                  <div class="flex items-center justify-between"><span>Patients per NP per month</span><span class="font-semibold" x-text="patientsPerNp().toFixed(0)"></span></div>
+                  <div class="flex items-center justify-between"><span>NPs required (current volume)</span><span class="font-semibold" x-text="npRequiredForPatients(pilotPatientCount())"></span></div>
+                  <div class="flex items-center justify-between"><span>Load status</span><span class="text-xs font-semibold px-2 py-1 rounded-full border" :class="npLoadStatus().className" x-text="npLoadStatus().label"></span></div>
+                </div>
+              </div>
+              <div class="bg-white border border-slate-200 rounded-xl p-5">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Live Pilot Revenue</p>
+                <p class="text-sm text-[#64748B] mt-2" x-text="finance.startPharmacies + ' pharmacies • ' + pilotPatientCount() + ' patients'"></p>
+                <p class="text-3xl font-semibold mt-3" x-text="formatCurrency(livePilotNetProfit())"></p>
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B] mt-1">Net MSO Profit</p>
+                <div class="mt-4 space-y-2 text-xs text-[#64748B]">
+                  <div class="flex items-center justify-between"><span>Gross Yield</span><span x-text="formatCurrency(livePilotGrossRevenue())"></span></div>
+                  <div class="flex items-center justify-between"><span>Logistics Payout</span><span x-text="'-' + formatCurrency(livePilotLogisticsPayout())"></span></div>
+                  <div class="flex items-center justify-between"><span>NP Labor</span><span x-text="'-' + formatCurrency(livePilotLaborCost())"></span></div>
+                </div>
+              </div>
+              <div class="bg-white border border-slate-200 rounded-xl p-5">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Year 1 Projection</p>
+                <p class="text-2xl font-semibold mt-3" x-text="formatCurrency(yearProjection(1).total)"></p>
+                <p class="text-xs text-[#64748B] mt-2" x-text="yearProjection(1).pharmaciesEnd + ' pharmacies by Dec'"></p>
+              </div>
+              <div class="bg-white border border-slate-200 rounded-xl p-5">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Year 2 Projection</p>
+                <p class="text-2xl font-semibold mt-3" x-text="formatCurrency(yearProjection(2).total)"></p>
+                <p class="text-xs text-[#64748B] mt-2" x-text="yearProjection(2).pharmaciesEnd + ' pharmacies by Dec'"></p>
+              </div>
+            </div>
+
+            <!-- Chart -->
+            <div x-show="!isLoading" id="finance-chart" class="bg-white border border-slate-200 rounded-xl p-5" :class="tourHighlight === 'finance-chart' ? 'tour-highlight' : ''">
+              <div class="flex items-center justify-between">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">24-Month Revenue Trajectory</p>
+                <span class="text-xs text-[#64748B] mono">Cumulative net revenue</span>
+              </div>
+              <div class="mt-4">
+                <canvas x-ref="revenueChart" height="180"></canvas>
+              </div>
+            </div>
+
+            <!-- v2: Revenue Actuals Overlay -->
+            <div x-show="!isLoading" id="actuals-overlay" class="bg-white border border-slate-200 rounded-xl p-5" :class="tourHighlight === 'actuals-overlay' ? 'tour-highlight' : ''">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Revenue Actuals Overlay</p>
+                    <span class="v2-badge">v2</span>
+                  </div>
+                  <p class="text-xs text-[#64748B] mt-1">Compare enrolled patient actuals vs. model projections.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer gap-3 text-xs font-semibold">
+                  <span class="text-[#64748B]" :class="!finance.showActuals ? 'text-[#0F172A]' : ''">Model Only</span>
+                  <div class="relative">
+                    <input type="checkbox" x-model="finance.showActuals" class="sr-only peer">
+                    <div class="w-12 h-6 bg-slate-200 rounded-full peer-checked:bg-[#2563EB] transition"></div>
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition peer-checked:translate-x-6"></span>
+                  </div>
+                  <span class="text-[#64748B]" :class="finance.showActuals ? 'text-[#2563EB]' : ''">+ Actuals</span>
+                </label>
+              </div>
+              <!-- Actuals metrics grid -->
+              <div x-show="finance.showActuals" class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 text-center">
+                  <p class="text-[10px] uppercase tracking-[0.25em] text-[#64748B]">Enrolled (Actual)</p>
+                  <p class="text-2xl font-semibold mt-2" x-text="triagePatients.filter(p => !p.disenrolled).length"></p>
+                  <p class="text-[10px] text-[#64748B] mt-1">Active patients</p>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 text-center">
+                  <p class="text-[10px] uppercase tracking-[0.25em] text-[#64748B]">READY to Bill</p>
+                  <p class="text-2xl font-semibold mt-2" x-text="triagePatients.filter(p => billingReady(p) && !p.disenrolled).length"></p>
+                  <p class="text-[10px] text-[#64748B] mt-1">This cycle</p>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 text-center">
+                  <p class="text-[10px] uppercase tracking-[0.25em] text-[#64748B]">Model Target</p>
+                  <p class="text-2xl font-semibold mt-2" x-text="pilotPatientCount()"></p>
+                  <p class="text-[10px] text-[#64748B] mt-1">Modeled patients</p>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-4 text-center" :class="actualsVariancePct() >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'">
+                  <p class="text-[10px] uppercase tracking-[0.25em]" :class="actualsVariancePct() >= 0 ? 'text-emerald-700' : 'text-rose-700'">Variance %</p>
+                  <p class="text-2xl font-semibold mt-2" :class="actualsVariancePct() >= 0 ? 'text-emerald-700' : 'text-rose-700'" x-text="(actualsVariancePct() >= 0 ? '+' : '') + actualsVariancePct().toFixed(1) + '%'"></p>
+                  <p class="text-[10px] mt-1" :class="actualsVariancePct() >= 0 ? 'text-emerald-600' : 'text-rose-600'" x-text="actualsVariancePct() >= 0 ? '▲ Ahead of model' : '▼ Behind model'"></p>
+                </div>
+              </div>
+              <!-- Variance driver -->
+              <div x-show="finance.showActuals" class="mt-4 border border-slate-200 rounded-xl p-4 bg-white text-sm">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Top Variance Driver</p>
+                <p class="font-semibold mt-2" x-text="actualsVarianceDriver()"></p>
+              </div>
+            </div>
+
+            <div x-show="!isLoading" class="text-xs text-[#64748B] border border-slate-200 bg-white rounded-xl p-4">
+              <p class="font-semibold text-[#0F172A]">Compliance Note</p>
+              <p>Device supply (98977) requires 16 days of data per 30-day cycle; Management (98980) requires 20 mins + 1 interaction per calendar month.</p>
+            </div>
+
+            <!-- Billing Export -->
+            <div x-show="!isLoading" id="finance-export" class="flex flex-wrap items-center justify-between gap-4 border border-slate-200 bg-white rounded-xl p-5" :class="tourHighlight === 'finance-export' ? 'tour-highlight' : ''">
+              <div>
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Billing Export</p>
+                <p class="text-sm font-semibold mt-2">2026 Compliance Bundle</p>
+                <p class="text-xs text-[#64748B] mt-1" x-text="'98977: ' + complianceBundleMetrics().code98977 + ' • 98980: ' + complianceBundleMetrics().code98980 + ' • 98985/98979: ' + complianceBundleMetrics().code98985"></p>
+              </div>
+              <button id="finance-download" @click="downloadComplianceBundle()" class="px-4 py-2 rounded-lg bg-[#0F766E] text-white text-xs font-semibold" :class="tourHighlight === 'finance-download' ? 'tour-highlight' : ''">Download 2026 Compliance Bundle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       DELIVERY VERIFICATION
+  ═══════════════════════════════════════════════════════ -->
+  <section x-show="page === 'delivery'" x-cloak class="min-h-screen bg-[#F8FAFC]">
+    <nav class="sticky top-0 z-40 bg-white/90 border-b border-slate-200 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="font-semibold tracking-tight">QCRx <span class="text-[#2563EB]">Delivery Verify</span></div>
+        <div class="flex items-center gap-3 text-xs">
+          <button @click="toggleTheme()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B]"><span x-text="isDark ? '☾ Dark' : '☀ Light'"></span></button>
+          <button @click="switchPersona('pharmacy')" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Back to Pharmacy</button>
+        </div>
+      </div>
+    </nav>
+    <div class="max-w-md mx-auto px-6 py-10">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <h2 class="text-xl font-semibold">QCRx Delivery Verification</h2>
+        <div class="mt-4 space-y-2 text-sm text-[#64748B]">
+          <p><span class="text-[#0F172A] font-semibold">Patient:</span> <span x-text="deliveryPatient()?.name || '—'"></span></p>
+          <p><span class="text-[#0F172A] font-semibold">Address:</span> <span x-text="deliveryPatient()?.address || 'Address on file'"></span></p>
+          <p><span class="text-[#0F172A] font-semibold">RxSafe Batch:</span> <span x-text="deliveryPatient()?.rxsafeBatchId || '—'"></span></p>
+        </div>
+        <div class="mt-6 border border-slate-200 rounded-xl p-4 text-center text-sm">
+          <p x-show="deliveryState.gpsStatus === 'loading'">📍 Acquiring GPS...</p>
+          <p x-show="deliveryState.gpsStatus === 'ready'">📍 GPS: <span x-text="deliveryState.coords"></span></p>
+          <p x-show="deliveryState.gpsStatus === 'error'" class="text-rose-600">GPS unavailable. Please retry.</p>
+        </div>
+        <button @click="confirmDelivery()" class="mt-6 w-full rounded-xl bg-[#16A34A] text-white text-lg font-semibold py-5" :class="(deliveryState.confirmed || deliveryState.gpsStatus !== 'ready') ? 'opacity-60 cursor-not-allowed' : ''" :disabled="deliveryState.confirmed || deliveryState.gpsStatus !== 'ready'">
+          ✅ HAND-TO-HAND VERIFIED
+        </button>
+        <div class="mt-6 space-y-2 text-xs text-[#64748B]">
+          <p>Timestamp: <span x-text="deliveryState.timestamp || '—'"></span></p>
+          <p>GPS: <span x-text="deliveryState.coords || '—'"></span></p>
+          <p class="mono" x-show="deliveryState.hashId" x-text="'Hash: ' + deliveryState.hashId"></p>
+          <p x-show="deliveryState.confirmed" class="text-emerald-700 font-semibold">✅ Delivery Confirmed — Record Hashed</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODALS
+  ═══════════════════════════════════════════════════════ -->
+
+  <!-- Bulk Intake Modal -->
+  <div x-show="showBulkModal" x-cloak class="fixed inset-0 z-50 bg-slate-200/70 backdrop-blur flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white border border-slate-200 w-full h-full sm:h-auto sm:max-w-3xl sm:rounded-xl p-6 sm:p-8 overflow-y-auto">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-[#0F766E]">Bulk Patient Intake</p>
+          <h3 class="text-2xl font-semibold mt-2">CSV/Excel Upload</h3>
+        </div>
+        <button @click="closeBulkModal()" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+      </div>
+      <div class="mt-6 space-y-6">
+        <div @dragover.prevent @drop.prevent="handleBulkDrop($event)" class="border border-dashed border-slate-200 rounded-xl p-6 bg-slate-50">
+          <input x-ref="bulkFile" type="file" accept=".csv,.xlsx,.xls" class="hidden" @change="handleBulkFile($event)">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-semibold">Drop CSV/Excel to begin parsing</p>
+              <p class="text-xs text-[#64748B] mt-1" x-text="bulkUpload.fileName ? 'Loaded: ' + bulkUpload.fileName : 'Awaiting file upload...'"></p>
+            </div>
+            <button @click="$refs.bulkFile.click()" class="px-4 py-2 rounded-lg bg-[#2563EB] text-white font-semibold text-sm">Choose File</button>
+          </div>
+        </div>
+        <div x-show="bulkUpload.mappingConfirmed" class="bg-white border border-slate-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Mapping Confirmation</p>
+            <span class="text-xs" :class="bulkUpload.mappingConfirmed ? 'text-emerald-600' : 'text-amber-600'" x-text="bulkUpload.mappingConfirmed ? 'Confirmed' : 'Needs Review'"></span>
+          </div>
+          <div class="mt-4 grid md:grid-cols-2 gap-4 text-sm">
+            <div class="border border-slate-200 rounded-xl p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B] mb-3">Required Fields</p>
+              <p class="text-[#334155] mono text-xs">patient_full_name</p>
+              <p class="text-[#334155] mono text-xs">date_of_birth</p>
+              <p class="text-[#334155] mono text-xs">primary_diagnosis_code</p>
+              <p class="text-[#334155] mono text-xs">pharmacy_npi_id</p>
+              <p class="text-[#334155] mono text-xs">monitoring_device_id</p>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 space-y-3">
+              <div>
+                <label class="text-xs text-[#64748B] uppercase tracking-[0.3em]">Patient Name</label>
+                <select x-model="bulkUpload.mapping.patientName" @change="bulkUpload.mappingConfirmed = false; buildBulkPreview()" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">Unmapped</option>
+                  <template x-for="header in bulkUpload.headers" :key="'pn-' + header"><option :value="header" x-text="header"></option></template>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-[#64748B] uppercase tracking-[0.3em]">DOB</label>
+                <select x-model="bulkUpload.mapping.dob" @change="bulkUpload.mappingConfirmed = false; buildBulkPreview()" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">Unmapped</option>
+                  <template x-for="header in bulkUpload.headers" :key="'dob-' + header"><option :value="header" x-text="header"></option></template>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-[#64748B] uppercase tracking-[0.3em]">ICD-10</label>
+                <select x-model="bulkUpload.mapping.icd10" @change="bulkUpload.mappingConfirmed = false; buildBulkPreview()" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">Unmapped</option>
+                  <template x-for="header in bulkUpload.headers" :key="'icd-' + header"><option :value="header" x-text="header"></option></template>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-[#64748B] uppercase tracking-[0.3em]">Pharmacy NPI</label>
+                <select x-model="bulkUpload.mapping.pharmacyId" @change="bulkUpload.mappingConfirmed = false; buildBulkPreview()" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">Unmapped</option>
+                  <template x-for="header in bulkUpload.headers" :key="'pharm-' + header"><option :value="header" x-text="header"></option></template>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-[#64748B] uppercase tracking-[0.3em]">Monitoring Device</label>
+                <select x-model="bulkUpload.mapping.deviceId" @change="bulkUpload.mappingConfirmed = false; buildBulkPreview()" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">Unmapped</option>
+                  <template x-for="header in bulkUpload.headers" :key="'dev-' + header"><option :value="header" x-text="header"></option></template>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="text-xs text-amber-700" x-show="bulkUpload.missingHeaders.length">Missing: <span class="mono" x-text="bulkUpload.missingHeaders.join(', ')"></span></div>
+            <button @click="confirmBulkMapping()" class="px-4 py-2 rounded-lg bg-[#0F766E] text-white text-xs font-semibold">Confirm Mapping</button>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Sample Rows</p>
+            <span class="text-xs text-[#64748B] mono" x-text="bulkUpload.rows.length ? bulkUpload.rows.length + ' rows parsed' : 'No rows parsed'"></span>
+          </div>
+          <div class="mt-4 table-scroll border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#F1F5F9] text-[#64748B] uppercase tracking-[0.3em] sticky top-0">
+                <tr>
+                  <th class="px-4 py-3">Patient</th><th class="px-4 py-3">DOB</th><th class="px-4 py-3">Pharmacy ID</th><th class="px-4 py-3">ICD-10</th><th class="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                <template x-for="row in bulkUpload.previewRows" :key="row.id">
+                  <tr class="odd:bg-slate-50 even:bg-white">
+                    <td class="px-4 py-3" x-text="row.patientName"></td>
+                    <td class="px-4 py-3" x-text="row.dob"></td>
+                    <td class="px-4 py-3" x-text="row.pharmacyId"></td>
+                    <td class="px-4 py-3" x-text="row.icd10"></td>
+                    <td class="px-4 py-3"><span class="text-xs font-semibold" :class="row.status.includes('Ineligible') ? 'text-amber-700' : 'text-emerald-700'" x-text="row.status"></span></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Validate Data</p>
+            <span class="text-xs text-[#0F766E]" x-text="bulkUpload.validated ? 'Validated' : 'Pending'"></span>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="text-xs text-[#64748B] mono">
+              <span x-text="bulkUpload.validationSummary.eligible + ' eligible'"></span>
+              <span class="mx-2">•</span>
+              <span x-text="bulkUpload.validationSummary.ineligible + ' ineligible'"></span>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button @click="validateBulkData()" class="px-4 py-2 rounded-lg border border-[#0F766E] text-[#0F766E] text-xs font-semibold disabled:opacity-40" :disabled="!bulkUpload.mappingConfirmed">Validate Data</button>
+              <button @click="submitBulkIntake()" class="px-4 py-2 rounded-lg bg-[#2563EB] text-white text-xs font-semibold disabled:opacity-40" :disabled="!bulkUpload.mappingConfirmed || !bulkUpload.validated || bulkUpload.missingHeaders.length">Submit Intake</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enrollment Modal -->
+  <div x-show="showEnrollModal" x-cloak class="fixed inset-0 z-50 bg-slate-200/70 backdrop-blur flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white border border-slate-200 w-full h-full sm:h-auto sm:max-w-lg sm:rounded-xl p-6 sm:p-8 overflow-y-auto">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Enrollment Engine</p>
+          <h3 class="text-2xl font-semibold mt-2">New Patient Intake</h3>
+        </div>
+        <button @click="closeEnroll()" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+      </div>
+      <div class="space-y-4 mt-6">
+        <input x-model="enrollForm.name" type="text" placeholder="Patient name" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm">
+        <input x-model="enrollForm.diagnosis" type="text" placeholder="Primary diagnosis" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm">
+        <div>
+          <label class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Insurance Type</label>
+          <select x-model="enrollForm.coinsuranceStatus" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm">
+            <option value="" disabled>Select insurance type</option>
+            <option value="MEDIGAP — $0 copay">Medicare + Medigap Supplement → Patient copay: $0</option>
+            <option value="ORIGINAL MEDICARE — 20% copay (~$21/mo)">Original Medicare Only → Patient copay: ~$21/month</option>
+            <option value="MEDICARE ADVANTAGE — Verify copay">Medicare Advantage → Patient copay: per plan</option>
+            <option value="OTHER / UNKNOWN — Verify before billing">Other / Unknown → Flag for verification</option>
+          </select>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-[#64748B] mb-3">Twilio Consent Flow</p>
+          <div class="flex items-center gap-3 text-sm">
+            <template x-for="(step, index) in consentSteps" :key="step">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs" :class="enrollForm.step >= index ? 'bg-[#2563EB] text-white' : 'bg-white text-[#64748B] border border-slate-200'" x-text="index + 1"></span>
+                <span x-text="step" :class="enrollForm.step >= index ? 'text-[#1E293B]' : 'text-[#64748B]'"></span>
+              </div>
+            </template>
+          </div>
+          <div class="mt-4 flex justify-between">
+            <button @click="prevConsent()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 text-[#64748B]">Previous Step</button>
+            <button @click="nextConsent()" class="text-xs px-3 py-2 rounded-lg bg-[#2563EB] text-white font-semibold">Advance</button>
+          </div>
+        </div>
+        <button @click="submitEnrollment()" class="w-full bg-[#2563EB] text-white font-semibold py-3 rounded-lg">Activate Monitoring</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- v2: Engagement Inbox Modal -->
+  <div x-show="showInbox" x-cloak class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white border border-slate-200 w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-2xl p-6 sm:p-8 overflow-y-auto">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#2563EB]">Engagement Inbox</p>
+            <span class="v2-badge">v2</span>
+          </div>
+          <h3 class="text-2xl font-semibold mt-2">Patient Keyword Alerts</h3>
+          <p class="text-xs text-[#64748B] mt-1">Auto-populated from SMS keyword triggers. NP response required within 24 hours for URGENT items.</p>
+        </div>
+        <button @click="showInbox = false" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+      </div>
+      <div class="mt-6 space-y-4">
+        <template x-for="alert in inboxAlerts()" :key="alert.patientId + alert.keyword">
+          <div class="border rounded-xl p-4" :class="alert.urgent ? 'border-rose-200 bg-rose-50' : 'border-amber-100 bg-amber-50'">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-[#0F172A]" x-text="alert.patientName"></span>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-bold" :class="alert.urgent ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white'" x-text="alert.urgent ? '🚨 URGENT' : '⚠ REVIEW'"></span>
+                </div>
+                <p class="text-xs text-[#64748B] mt-1" x-text="'Keyword: ' + alert.keyword + ' • ' + alert.timestamp"></p>
+                <p class="text-sm mt-2" x-text="alert.message"></p>
+              </div>
+              <div class="flex flex-col gap-2">
+                <button @click="jumpToPatient(alert.patientId); showInbox = false" class="px-3 py-1.5 rounded-lg bg-[#2563EB] text-white text-xs font-semibold">Open Record</button>
+                <button @click="alert.status = 'Acknowledged'; notify('Alert acknowledged for ' + alert.patientName)" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-[#64748B]" x-show="alert.status === 'Pending'">Acknowledge</button>
+                <span class="text-[10px] text-emerald-700 font-semibold text-center" x-show="alert.status !== 'Pending'" x-text="alert.status"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div x-show="inboxAlerts().length === 0" class="text-center py-8">
+          <p class="text-3xl">📬</p>
+          <p class="text-sm text-[#64748B] mt-2">No active keyword alerts. Load demo patients to see live triggers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- v2: Disenrollment Modal -->
+  <div x-show="showDisenrollModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white border border-slate-200 w-full h-full sm:h-auto sm:max-w-lg sm:rounded-2xl p-6 sm:p-8 overflow-y-auto">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <p class="text-xs uppercase tracking-[0.3em] text-rose-600">Close Episode</p>
+            <span class="v2-badge">v2</span>
+          </div>
+          <h3 class="text-2xl font-semibold mt-2">Disenroll Patient</h3>
+          <p class="text-sm text-[#64748B] mt-1" x-text="disenrollTarget?.name || ''"></p>
+        </div>
+        <button @click="showDisenrollModal = false" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+      </div>
+      <div class="mt-6 space-y-5">
+        <div>
+          <label class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Reason for Closure</label>
+          <select x-model="disenrollForm.reason" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm">
+            <option value="" disabled>Select reason</option>
+            <option value="Patient Request">Patient Request</option>
+            <option value="Clinical Discharge">Clinical Discharge</option>
+            <option value="Insurance Change">Insurance Change</option>
+            <option value="Deceased">Deceased</option>
+            <option value="Non-Adherent">Non-Adherent — Unable to Engage</option>
+            <option value="Moved/Relocated">Moved / Relocated</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Final Encounter Date</label>
+          <input type="date" x-model="disenrollForm.finalDate" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm">
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-[0.3em] text-[#64748B]">NP Closure Notes (Optional)</label>
+          <textarea x-model="disenrollForm.notes" rows="3" class="mt-2 w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm" placeholder="Document any final clinical observations..."></textarea>
+        </div>
+        <!-- Final billing summary -->
+        <div x-show="disenrollTarget" class="border border-slate-200 rounded-xl p-4 bg-slate-50 text-sm">
+          <p class="text-xs uppercase tracking-[0.3em] text-[#64748B] mb-3">Final Billing Summary</p>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[#64748B]">Days in cycle</span>
+              <span class="font-semibold" x-text="disenrollTarget?.adherenceDays + ' days'"></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[#64748B]">98977 Device Supply</span>
+              <span class="font-semibold" :class="(disenrollTarget?.adherenceDays || 0) >= 16 ? 'text-emerald-700' : 'text-amber-700'" x-text="(disenrollTarget?.adherenceDays || 0) >= 16 ? 'Eligible — Full' : 'Prorated (< 16 days)'"></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[#64748B]">98980 Management</span>
+              <span class="font-semibold" :class="(disenrollTarget?.npMinutesLogged || 0) >= 20 ? 'text-emerald-700' : 'text-amber-700'" x-text="(disenrollTarget?.npMinutesLogged || 0) >= 20 ? 'Eligible — ' + formatCurrency(finance.rate98980) : 'Partial 98979 (' + (disenrollTarget?.npMinutesLogged || 0) + ' min logged)'"></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button @click="showDisenrollModal = false" class="flex-1 px-4 py-3 rounded-lg border border-slate-200 text-[#64748B] text-sm font-semibold">Cancel</button>
+          <button @click="confirmDisenroll()" class="flex-1 px-4 py-3 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700" :disabled="!disenrollForm.reason || !disenrollForm.finalDate" :class="(!disenrollForm.reason || !disenrollForm.finalDate) ? 'opacity-50 cursor-not-allowed' : ''">Confirm Close Episode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI-Assisted Clinical Encounter -->
+  <div x-show="showPatientPanel" x-cloak class="fixed inset-0 z-50 bg-[#F8FAFC] overflow-y-auto">
+    <div class="min-h-screen">
+      <div class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="sidebar-kicker">AI-Assisted Clinical Encounter</p>
+            <h3 class="text-3xl md:text-4xl font-semibold mt-3" x-text="activePatient?.name"></h3>
+            <p class="text-xs text-[#64748B] mt-1" x-text="'Patient ID: ' + activePatient?.id"></p>
+          </div>
+          <button @click="closePatientPanel()" class="px-3 py-2 rounded-lg border border-slate-200 text-[#64748B] hover:text-[#0F172A]">Close</button>
+        </div>
+
+        <!-- Encounter Steps Progress -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5">
+          <div class="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-[#64748B]">
+            <span x-text="'Step ' + encounterStep + ' of ' + encounterSteps.length"></span>
+            <span x-text="encounterSteps[encounterStep - 1]"></span>
+          </div>
+          <div class="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-[#2563EB]" :style="'width: ' + encounterProgress() + '%'"></div>
+          </div>
+          <div class="mt-3 grid grid-cols-5 gap-2 text-[10px] text-[#64748B] uppercase tracking-[0.2em]">
+            <template x-for="(stepLabel, index) in encounterSteps" :key="stepLabel">
+              <div class="text-center" :class="index + 1 === encounterStep ? 'text-[#2563EB] font-semibold' : ''" x-text="index + 1"></div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Step 1: Identity -->
+        <div class="grid lg:grid-cols-[1.25fr_0.75fr] gap-6" x-show="encounterStep === 1">
+          <div class="bg-white border border-slate-200 rounded-2xl p-6">
+            <div class="flex flex-wrap items-start justify-between gap-6">
+              <div class="space-y-4">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Identity</p>
+                <div class="space-y-2">
+                  <p class="text-2xl font-semibold text-[#0F172A]" x-text="activePatient?.name"></p>
+                  <p class="text-sm text-[#64748B]" x-text="'DOB: ' + (activePatient?.dob || '—')"></p>
+                  <p class="text-sm text-[#64748B]" x-text="'Address: ' + (activePatient?.address || '—')"></p>
+                  <p class="text-sm text-[#64748B]" x-text="'Phone: ' + (activePatient?.phone || '—')"></p>
+                  <p class="text-sm text-[#64748B]" x-text="'Risk: ' + riskStatus(activePatient).toUpperCase()"></p>
+                </div>
+              </div>
+              <div class="flex flex-col items-start gap-4">
+                <a class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#2563EB] text-white text-sm font-semibold" :href="activePatient?.phone ? 'tel:' + activePatient.phone : '#'" :class="activePatient?.phone ? '' : 'opacity-50 pointer-events-none'">One-Touch Call</a>
+                <div class="bg-slate-900 text-white rounded-2xl px-6 py-5 w-full max-w-xs">
+                  <p class="text-xs uppercase tracking-[0.3em] text-slate-300">98980 Live Timer</p>
+                  <p class="text-4xl font-semibold mt-2" x-text="timerDisplay()"></p>
+                  <p class="text-xs text-slate-300 mt-1">Session minutes: <span class="font-semibold text-white" x-text="timerMinutes()"></span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Pharmacist Node</p>
+              <span class="text-xs font-semibold text-[#0F766E]">98977 Audit Ready</span>
+            </div>
+            <div class="space-y-3 text-sm">
+              <div class="flex items-center justify-between"><span class="text-[#64748B]">RxSafe Batch ID</span><span class="font-semibold text-[#0F172A]" x-text="activePatient?.rxsafeBatchId || '—'"></span></div>
+              <div class="flex items-center justify-between"><span class="text-[#64748B]">Courier Delivery Timestamp</span><span class="font-semibold text-[#0F172A]" x-text="activePatient?.deliveryTimestamp || '—'"></span></div>
+              <div class="flex items-center justify-between"><span class="text-[#64748B]">Primary Therapy</span><span class="font-semibold text-[#0F172A]" x-text="activePatient?.medications?.[0] || '—'"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-2 text-sm" x-show="encounterStep === 1">
+          <input type="checkbox" x-model="identityConfirmed" class="accent-[#2563EB]">
+          <span>I verified patient identity, contact details, and consent.</span>
+        </div>
+
+        <!-- Step 2: Vitals -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6" x-show="encounterStep === 2">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Vitals Dashboard</p>
+              <h4 class="text-lg font-semibold mt-2">Vitals Trend</h4>
+            </div>
+            <div class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-xs font-semibold" x-show="aiFlags.length" x-text="aiFlags[0]"></div>
+          </div>
+          <div class="mt-6 grid md:grid-cols-2 gap-4">
+            <div class="border border-slate-200 rounded-xl p-4">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold">Blood Pressure</p>
+                <span class="text-xs text-[#64748B]" x-text="latestTrendValue(activePatient?.systolicBp) + '/' + latestTrendValue(activePatient?.diastolicBp) + ' mmHg'"></span>
+              </div>
+              <svg class="mt-4 w-full h-12" viewBox="0 0 160 48" preserveAspectRatio="none">
+                <polyline fill="none" stroke="#2563EB" stroke-width="2" :points="sparklinePoints(activePatient?.systolicBp, 160, 48, 4)"></polyline>
+              </svg>
+              <p class="text-xs text-[#64748B] mt-2">7-day sparkline • Δ <span class="font-semibold text-[#0F172A]" x-text="trendDelta(activePatient?.systolicBp)"></span></p>
+              <p class="text-xs mt-2 font-semibold" :class="vitalsDeltaFlag(activePatient, 'bp').class" x-text="vitalsDeltaFlag(activePatient, 'bp').label"></p>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold">Weight</p>
+                <span class="text-xs text-[#64748B]" x-text="latestTrendValue(activePatient?.weight) + ' lb'"></span>
+              </div>
+              <svg class="mt-4 w-full h-12" viewBox="0 0 160 48" preserveAspectRatio="none">
+                <polyline fill="none" stroke="#0F766E" stroke-width="2" :points="sparklinePoints(activePatient?.weight, 160, 48, 4)"></polyline>
+              </svg>
+              <p class="text-xs text-[#64748B] mt-2">7-day sparkline • Δ <span class="font-semibold text-[#0F172A]" x-text="trendDelta(activePatient?.weight)"></span></p>
+              <p class="text-xs mt-2 font-semibold" :class="vitalsDeltaFlag(activePatient, 'weight').class" x-text="vitalsDeltaFlag(activePatient, 'weight').label"></p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-2 text-sm" x-show="encounterStep === 2">
+          <input type="checkbox" x-model="vitalsReviewed" class="accent-[#2563EB]">
+          <span>Vitals reviewed and changes documented.</span>
+        </div>
+
+        <!-- Step 3: AI Summary -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5" x-show="encounterStep === 3">
+          <div>
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Chief Complaint (AI-Generated)</p>
+            <div class="mt-3 border border-slate-200 bg-slate-50 rounded-xl p-4 text-sm" x-show="aiLoading">🤖 Glass Health AI analyzing patient data...</div>
+            <div class="mt-3 border border-blue-100 bg-blue-50 rounded-xl p-4 text-sm" x-show="!aiLoading">
+              <span class="font-semibold">AI Summary:</span> <span x-text="aiSummary || 'AI summary pending.'"></span>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">⚠ Clinical Flags</p>
+            <div class="mt-3 border border-amber-100 bg-amber-50 rounded-xl p-4 text-sm text-amber-900">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold">Flagged Items</p>
+                <span x-show="aiUrgent" class="px-2 py-1 rounded-full text-[10px] font-semibold bg-rose-600 text-white pulse-red">🚨 URGENT</span>
+              </div>
+              <ul class="mt-2 list-disc list-inside text-xs space-y-1">
+                <template x-for="flag in aiFlags" :key="flag"><li x-text="flag"></li></template>
+              </ul>
+              <p x-show="!aiFlags.length" class="text-xs text-amber-700">No clinical flags detected.</p>
+            </div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm flex items-center gap-2">
+            <input type="checkbox" x-model="aiReviewed" class="accent-[#2563EB]">
+            <span>Reviewed AI summary and clinical flags.</span>
+          </div>
+        </div>
+
+        <!-- Step 4: Documentation -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4" x-show="encounterStep === 4">
+          <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Encounter Documentation</p>
+          <label class="mt-2 block text-sm font-semibold text-[#0F172A]">AI-Drafted Narrative</label>
+          <textarea x-model="aiDraftNote" rows="6" class="mt-2 w-full bg-white border border-slate-200 rounded-xl p-4 text-sm" placeholder="AI-drafted narrative appears here"></textarea>
+          <div class="mt-3 flex flex-wrap items-center gap-3">
+            <input x-model.number="aiDraftMinutes" type="number" min="0" class="w-28 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="mins">
+            <button @click="draftNarrative()" class="px-4 py-2 rounded-lg border border-slate-200 text-sm font-semibold">Regenerate Draft</button>
+          </div>
+          <p class="text-xs text-[#94A3B8]">Clinical AI powered by Glass Health — evidence-based, guideline-aligned. NP review required before logging.</p>
+        </div>
+
+        <!-- Step 5: Log & Hash -->
+        <div class="grid lg:grid-cols-[1.1fr_0.9fr] gap-6" x-show="encounterStep === 5" x-effect="encounterStep === 5 && prepareEncounterHash()">
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+            <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Log &amp; Hash</p>
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 text-sm">
+              <p class="font-semibold">Ready to seal encounter.</p>
+              <p class="text-xs text-[#64748B] mt-2">Minutes logged: <span class="font-semibold" x-text="timerMinutes()"></span> • Pending hash: <span class="mono" x-text="pendingAuditHash || '—'"></span></p>
+            </div>
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" x-model="logAcknowledged" class="accent-[#2563EB]">
+              <span>I confirm the narrative is complete and ready to hash.</span>
+            </label>
+            <button @click="approveAndLog()" class="w-full px-6 py-3 rounded-lg bg-[#16A34A] text-white text-sm font-semibold min-h-[48px]" :class="canApproveEncounter() ? '' : 'opacity-50 cursor-not-allowed'" :disabled="!canApproveEncounter()">Approve &amp; Log</button>
+          </div>
+          <div class="space-y-6">
+            <!-- v2: Communication Log -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Communication Log</p>
+                  <span class="v2-badge">v2</span>
+                </div>
+                <span class="text-xs font-semibold text-[#0F766E]">Hashed/Verified</span>
+              </div>
+              <p class="text-xs text-[#64748B] mt-2">All SMS/IVR interactions for this patient.</p>
+              <div class="mt-4 space-y-3 max-h-64 overflow-y-auto">
+                <template x-for="entry in fullCommLog(activePatient)" :key="entry.id + entry.timestamp">
+                  <div class="border border-slate-200 rounded-xl p-3 text-sm bg-white">
+                    <div class="flex items-center justify-between text-xs text-[#64748B] mono">
+                      <span x-text="entry.timestamp"></span>
+                      <span class="px-2 py-0.5 rounded-full text-[9px] font-bold" :class="entry.channel === 'SMS' ? 'bg-blue-100 text-blue-700' : (entry.channel === 'IVR' ? 'bg-teal-100 text-teal-700' : 'bg-purple-100 text-purple-700')" x-text="entry.channel"></span>
+                    </div>
+                    <p class="mt-2" x-text="entry.detail"></p>
+                    <p class="text-xs text-[#64748B] mono mt-1" x-show="entry.hash" x-text="'Hash: ' + entry.hash"></p>
+                  </div>
+                </template>
+                <p x-show="!fullCommLog(activePatient).length" class="text-xs text-[#64748B]">No communication entries yet.</p>
+              </div>
+              <!-- Manual log entry -->
+              <div class="mt-4 space-y-2 border-t border-slate-200 pt-4">
+                <p class="text-[10px] uppercase tracking-[0.25em] text-[#64748B]">Add Manual Entry</p>
+                <textarea x-model="newCommLogEntry" rows="2" class="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs" placeholder="Document a phone call, fax, or other interaction..."></textarea>
+                <button @click="addCommLogEntry()" class="px-3 py-1.5 rounded-lg bg-[#2563EB] text-white text-xs font-semibold">Log Entry</button>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-6">
+              <div class="flex items-center justify-between">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Twilio Interaction Hash Log</p>
+                <span class="text-xs font-semibold text-[#0F766E]">Hashed/Verified</span>
+              </div>
+              <div class="mt-4 space-y-3">
+                <template x-for="entry in twilioAuditLog" :key="entry.hash">
+                  <div class="border border-slate-200 rounded-xl p-3 text-sm">
+                    <div class="flex items-center justify-between text-xs text-[#64748B] mono">
+                      <span x-text="entry.timestamp"></span><span x-text="entry.channel"></span>
+                    </div>
+                    <p class="mt-2" x-text="entry.detail"></p>
+                    <p class="text-xs text-[#64748B] mono mt-2" x-text="'Hash: ' + entry.hash"></p>
+                  </div>
+                </template>
+                <p x-show="!twilioAuditLog.length" class="text-xs text-[#64748B]">No automated interactions logged yet.</p>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-6">
+              <div class="flex items-center justify-between">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Analog Channel</p>
+                <span class="text-xs font-semibold text-[#0F766E]">Hashed/Verified</span>
+              </div>
+              <div class="mt-4 flex items-center justify-between">
+                <div>
+                  <p class="text-base font-semibold text-[#0F172A]">Monitoring Channel</p>
+                  <p class="text-xs text-[#475569]">Switch between SMS and Voice/IVR.</p>
+                </div>
+                <button @click="toggleMonitoring(activePatient)" role="switch" :aria-checked="activePatient?.monitoring !== 'SMS'" class="relative inline-flex h-10 w-28 items-center rounded-full border border-slate-300 bg-white shadow-sm transition">
+                  <span class="absolute left-3 toggle-label" :class="activePatient?.monitoring === 'SMS' ? 'text-[#1D4ED8]' : 'text-[#94A3B8]'">SMS</span>
+                  <span class="absolute right-3 toggle-label" :class="activePatient?.monitoring !== 'SMS' ? 'text-[#0F766E]' : 'text-[#94A3B8]'">Voice</span>
+                  <span class="h-7 w-7 rounded-full bg-white shadow transition" :class="activePatient?.monitoring === 'SMS' ? 'translate-x-1' : 'translate-x-[80px]'"></span>
+                </button>
+              </div>
+              <div class="mt-4 space-y-3 text-sm">
+                <template x-for="entry in engagementLogs(activePatient)" :key="entry.id">
+                  <div class="rounded-lg border border-slate-200 bg-white p-3">
+                    <div class="flex items-center justify-between text-xs text-[#64748B] mono">
+                      <span x-text="entry.timestamp"></span><span x-text="entry.channel"></span>
+                    </div>
+                    <p class="mt-2" x-text="entry.detail"></p>
+                  </div>
+                </template>
+                <p x-show="!engagementLogs(activePatient).length" class="text-xs text-[#64748B]">No outreach logs recorded yet.</p>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-6">
+              <div class="flex items-center justify-between">
+                <p class="text-xs uppercase tracking-[0.3em] text-[#64748B]">Audit-Ready Narrative Log</p>
+                <span class="text-xs font-semibold text-[#0F766E]">Hashed/Verified</span>
+              </div>
+              <p class="text-sm text-[#64748B] mt-3">Clinical Minutes Logged: <span class="font-semibold" x-text="totalMinutes(activePatient)"></span> / <span x-text="activePatient?.npMinutesTarget || 20"></span></p>
+              <div class="h-2 bg-slate-200 rounded-full mt-2 overflow-hidden">
+                <div class="h-full bg-[#0F766E]" :style="'width: ' + Math.min(100, (totalMinutes(activePatient) / (activePatient?.npMinutesTarget || 20)) * 100) + '%'"></div>
+              </div>
+              <div class="mt-4 space-y-3">
+                <template x-for="entry in activePatient?.narrativeLogs" :key="entry.id">
+                  <div class="border border-slate-200 rounded-xl p-3 text-sm">
+                    <div class="flex justify-between text-xs text-[#64748B] mono">
+                      <span x-text="entry.timestamp"></span><span x-text="entry.minutes + ' mins'"></span>
+                    </div>
+                    <p class="mt-2" x-text="entry.note"></p>
+                    <p class="text-xs text-[#64748B] mono mt-2" x-show="entry.auditHash" x-text="'Audit Hash: ' + entry.auditHash"></p>
+                    <p class="text-xs text-[#0F766E] mt-2">Hashed/Verified</p>
+                  </div>
+                </template>
+                <p x-show="!activePatient?.narrativeLogs?.length" class="text-xs text-[#64748B]">No narrative entries logged yet.</p>
+              </div>
+              <div class="mt-4 space-y-3">
+                <textarea x-model="newLog" rows="3" class="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm" placeholder="Add narrative note"></textarea>
+                <div class="flex items-center gap-3">
+                  <input x-model.number="newMinutes" type="number" min="0" class="w-24 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="mins">
+                  <button @click="addNarrative()" class="px-4 py-2 rounded-lg bg-[#2563EB] text-white text-xs font-semibold">Log Minutes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Encounter Navigation -->
+        <div class="flex items-center justify-between gap-3">
+          <button @click="prevEncounterStep()" class="px-4 py-2 rounded-lg border border-slate-200 text-sm" :class="encounterStep === 1 ? 'opacity-50 cursor-not-allowed' : ''" :disabled="encounterStep === 1">Back</button>
+          <button x-show="encounterStep < 5" @click="nextEncounterStep()" class="px-4 py-2 rounded-lg bg-[#2563EB] text-white text-sm font-semibold" :class="canAdvanceEncounter() ? '' : 'opacity-50 cursor-not-allowed'" :disabled="!canAdvanceEncounter()">Next Step</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Communication Overlay -->
+  <div x-show="showContactOverlay" x-cloak class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur flex items-center justify-center p-2 sm:p-6">
+    <div class="bg-white border border-slate-200 w-full h-full sm:h-auto sm:max-w-xl sm:rounded-2xl p-6 sm:p-8 overflow-y-auto">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-[#0F766E]">Communication Overlay</p>
+          <h3 class="text-2xl font-semibold mt-2">Synchronous Interaction Logged</h3>
+        </div>
+        <button @click="closeContactOverlay()" class="text-[#64748B] hover:text-[#0F172A]">✕</button>
+      </div>
+      <div class="mt-6 space-y-3 text-sm">
+        <p><span class="font-semibold">Patient:</span> <span x-text="contactPatient?.name || '—'"></span></p>
+        <p><span class="font-semibold">Channel:</span> Twilio Voice/SMS</p>
+        <p><span class="font-semibold">Twilio SID:</span> <span class="mono text-[#0F766E]" x-text="contactSid || '—'"></span></p>
+        <p><span class="font-semibold">Timestamp:</span> <span class="mono" x-text="contactTimestamp || '—'"></span></p>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-[#64748B]">Interaction logged in Compliance Audit Vault as a synchronous interaction with unique Twilio SID hashing.</div>
+      </div>
+      <div class="mt-6 flex items-center justify-end gap-2">
+        <button @click="closeContactOverlay()" class="px-4 py-2 rounded-lg border border-slate-200 text-[#64748B]">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tour Overlay -->
+  <div x-show="tourActive" x-cloak>
+    <div class="tour-overlay"></div>
+    <div class="tour-tooltip bg-white border border-slate-200 rounded-xl p-4 shadow-lg" :style="tourStyle">
+      <p class="text-[10px] uppercase tracking-[0.3em] text-[#64748B]">Onboarding Tour</p>
+      <p class="text-sm font-semibold mt-2" x-text="currentTourStep().title"></p>
+      <p class="text-xs text-[#64748B] mt-2" x-text="currentTourStep().text"></p>
+      <div class="mt-4 flex items-center justify-between text-xs">
+        <span class="text-[#64748B]" x-text="'Step ' + (tourStepIndex + 1) + ' of ' + currentTourSteps().length"></span>
+        <div class="flex items-center gap-2">
+          <button @click="skipTour()" class="px-3 py-1 rounded-lg border border-slate-200 text-[#64748B]">Skip</button>
+          <button @click="nextTourStep()" class="px-3 py-1 rounded-lg bg-[#2563EB] text-white font-semibold" x-text="tourStepIndex + 1 === currentTourSteps().length ? 'Done' : 'Next'"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+function portalData() {
+  const DEMO_PATIENTS = [
+    {
+      id: "PT-001", name: "Garcia, Maria", dob: "11/03/1952", age: 73,
+      address: "1421 Pacific Coast Hwy, Santa Monica, CA", phone: "310-555-0142",
+      diagnosis: "Type 2 Diabetes (E11.9)", icd10: "E11.9",
+      medications: ["Metformin 1000mg", "Lisinopril 10mg", "Atorvastatin 40mg"],
+      pharmacyNpi: "1234567890", deviceId: "RX-00143", rxsafeBatchId: "RXSF-2026-00143-FEB",
+      riskStatus: "RED", adherenceDays: 13, adherenceTarget: 16, missedDoses: 3,
+      lastMissed: "Feb 18, 2026", symptomKeywords: ["DIZZY", "TIRED"],
+      systolicBp: [148,152,145,158,150,155,148], diastolicBp: [92,95,90,98,93,96,94],
+      weight: [162,163,162,164,163,165,164],
+      deliveryVerified: true, deliveryTimestamp: "Feb 03, 2026 — 10:42 AM",
+      deliveryGps: "34.0195° N, 118.4912° W", consentDate: "Jan 29, 2026",
+      consentTwilioSid: "SM3A9F2B1C4D7E8F0A", enrollmentDate: "Jan 29, 2026",
+      npMinutesLogged: 14, npMinutesTarget: 20, billingStatus: "98977_PENDING",
+      lifecycleStage: ["consent","delivered","monitoring"],
+      coinsuranceStatus: "MEDIGAP — $0 copay", lastContact: "Feb 16, 2026"
+    },
+    {
+      id: "PT-002", name: "Smith, James", dob: "04/12/1948", age: 77,
+      address: "908 Wilshire Blvd, Santa Monica, CA", phone: "310-555-0131",
+      diagnosis: "Hypertension (I10)", icd10: "I10",
+      medications: ["Amlodipine 5mg", "Losartan 50mg", "Aspirin 81mg"],
+      pharmacyNpi: "1234567890", deviceId: "RX-00142", rxsafeBatchId: "RXSF-2026-00142-FEB",
+      riskStatus: "GREEN", adherenceDays: 16, adherenceTarget: 16, missedDoses: 0,
+      lastMissed: null, symptomKeywords: [],
+      systolicBp: [138,135,132,136,130,128,132], diastolicBp: [85,83,82,84,80,79,82],
+      weight: [178,178,177,178,177,176,177],
+      deliveryVerified: true, deliveryTimestamp: "Feb 02, 2026 — 2:15 PM",
+      deliveryGps: "34.0205° N, 118.4890° W", consentDate: "Jan 28, 2026",
+      consentTwilioSid: "SM7C2D4E6F8A0B1C2D", enrollmentDate: "Jan 28, 2026",
+      npMinutesLogged: 22, npMinutesTarget: 20, billingStatus: "READY_TO_BILL",
+      lifecycleStage: ["consent","delivered","monitoring","clinical","billing"],
+      coinsuranceStatus: "ORIGINAL MEDICARE — 20% copay (~$21/mo)", lastContact: "Feb 17, 2026"
+    },
+    {
+      id: "PT-003", name: "Johnson, Robert", dob: "07/22/1945", age: 80,
+      address: "112 Ocean Park Blvd, Santa Monica, CA", phone: "310-555-0194",
+      diagnosis: "COPD (J44.1)", icd10: "J44.1",
+      medications: ["Tiotropium inhaler", "Albuterol PRN", "Prednisone 5mg"],
+      pharmacyNpi: "1234567890", deviceId: "RX-00144", rxsafeBatchId: "RXSF-2026-00144-FEB",
+      riskStatus: "YELLOW", adherenceDays: 11, adherenceTarget: 16, missedDoses: 1,
+      lastMissed: "Feb 17, 2026", symptomKeywords: ["SHORT OF BREATH"],
+      systolicBp: [125,128,122,130,126,124,127], diastolicBp: [78,80,76,82,79,77,80],
+      weight: [155,154,155,153,154,153,154],
+      deliveryVerified: true, deliveryTimestamp: "Feb 04, 2026 — 11:30 AM",
+      deliveryGps: "34.0178° N, 118.4955° W", consentDate: "Jan 30, 2026",
+      consentTwilioSid: "SM1B3C5D7E9F0A2B4C", enrollmentDate: "Jan 30, 2026",
+      npMinutesLogged: 9, npMinutesTarget: 20, billingStatus: "98977_PENDING",
+      lifecycleStage: ["consent","delivered","monitoring"],
+      coinsuranceStatus: "MEDIGAP — $0 copay", lastContact: "Feb 15, 2026"
+    },
+    {
+      id: "PT-004", name: "Williams, Patricia", dob: "09/15/1950", age: 75,
+      address: "220 Main St, Santa Monica, CA", phone: "310-555-0177",
+      diagnosis: "Heart Failure (I50.9)", icd10: "I50.9",
+      medications: ["Furosemide 40mg","Carvedilol 12.5mg","Spironolactone 25mg","Digoxin 0.125mg"],
+      pharmacyNpi: "1234567890", deviceId: "RX-00145", rxsafeBatchId: "RXSF-2026-00145-FEB",
+      riskStatus: "RED", adherenceDays: 8, adherenceTarget: 16, missedDoses: 5,
+      lastMissed: "Feb 19, 2026", symptomKeywords: ["SWOLLEN","HELP","FEET SWOLLEN"],
+      systolicBp: [155,162,158,168,160,165,170], diastolicBp: [96,100,97,104,99,102,106],
+      weight: [192,194,196,198,197,200,203],
+      deliveryVerified: true, deliveryTimestamp: "Feb 05, 2026 — 9:00 AM",
+      deliveryGps: "34.0215° N, 118.4870° W", consentDate: "Feb 01, 2026",
+      consentTwilioSid: "SM9E0F1A2B3C4D5E6F", enrollmentDate: "Feb 01, 2026",
+      npMinutesLogged: 6, npMinutesTarget: 20, billingStatus: "ESCALATE",
+      lifecycleStage: ["consent","delivered","monitoring"],
+      coinsuranceStatus: "MEDIGAP — $0 copay", lastContact: "Feb 14, 2026"
+    },
+    {
+      id: "PT-005", name: "Brown, Dorothy", dob: "03/08/1955", age: 70,
+      address: "310 Arizona Ave, Santa Monica, CA", phone: "310-555-0128",
+      diagnosis: "Type 2 Diabetes + Hypertension (E11.9, I10)", icd10: "E11.9",
+      medications: ["Insulin Glargine 20u QHS","Metformin 500mg","Amlodipine 10mg","Atorvastatin 20mg"],
+      pharmacyNpi: "1234567890", deviceId: "RX-00146", rxsafeBatchId: "RXSF-2026-00146-FEB",
+      riskStatus: "GREEN", adherenceDays: 16, adherenceTarget: 16, missedDoses: 0,
+      lastMissed: null, symptomKeywords: [],
+      systolicBp: [132,130,128,131,129,127,130], diastolicBp: [82,80,79,83,80,78,81],
+      weight: [168,167,168,167,166,167,166],
+      deliveryVerified: true, deliveryTimestamp: "Feb 03, 2026 — 3:45 PM",
+      deliveryGps: "34.0188° N, 118.4932° W", consentDate: "Jan 31, 2026",
+      consentTwilioSid: "SM4F5A6B7C8D9E0F1A", enrollmentDate: "Jan 31, 2026",
+      npMinutesLogged: 21, npMinutesTarget: 20, billingStatus: "READY_TO_BILL",
+      lifecycleStage: ["consent","delivered","monitoring","clinical","billing"],
+      coinsuranceStatus: "MEDICARE ADVANTAGE — $0 copay", lastContact: "Feb 18, 2026"
+    }
+  ];
+
+  return {
+    // ─── Core State ───────────────────────────────────────────
+    page: 'login',
+    isLoading: true,
+    isDark: false,
+    themePreference: 'system',
+    showClinicalDrawer: false,
+    demoSeeded: false,
+    showEnrollModal: false,
+    showBulkModal: false,
+    showPatientPanel: false,
+    showContactOverlay: false,
+    activePatient: null,
+    contactPatient: null,
+    contactSid: '',
+    contactTimestamp: '',
+    encounterApproved: false,
+    notification: '',
+    newLog: '',
+    newMinutes: 5,
+    aiSummary: '',
+    aiFlags: [],
+    aiLoading: false,
+    aiUrgent: false,
+    aiDraftNote: '',
+    aiDraftMinutes: 5,
+    twilioAuditLog: [],
+    triageSort: 'risk',
+    triagePage: 1,
+    triagePerPage: 25,
+    timerSeconds: 0,
+    timerInterval: null,
+    timerRunning: false,
+    inactivityTimer: null,
+    inactivityTimeoutMs: 15 * 60 * 1000,
+    encounterStep: 1,
+    encounterSteps: ['Identity Verification','Vitals Review','AI Summary & Flags','Encounter Documentation','Log & Hash'],
+    identityConfirmed: false,
+    vitalsReviewed: false,
+    aiReviewed: false,
+    logAcknowledged: false,
+    pendingAuditHash: '',
+    tourActive: false,
+    tourPersona: '',
+    tourStepIndex: 0,
+    tourHighlight: '',
+    tourStyle: 'top: 20px; left: 20px;',
+    revenueChart: null,
+    consentSteps: ['Setup','Opt-in','Education'],
+    enrollForm: { name: '', diagnosis: '', coinsuranceStatus: '', step: 0 },
+
+    // ─── v2 State ─────────────────────────────────────────────
+    showInbox: false,
+    showDisenrollModal: false,
+    disenrollTarget: null,
+    disenrollForm: { reason: '', finalDate: '', notes: '' },
+    showBatchPreview: false,
+    newCommLogEntry: '',
+
+    bulkUpload: {
+      fileName: '', headers: [], rows: [], previewRows: [],
+      mapping: { patientName: '', dob: '', pharmacyId: '', icd10: '', deviceId: '' },
+      missingHeaders: [], mappingConfirmed: false, validated: false, progress: 0,
+      validationSummary: { eligible: 0, ineligible: 0 }
+    },
+
+    triagePatients: [],
+    pharmacyPatients: [],
+    auditTrail: [],
+    deliveryState: {
+      patientId: '', gpsStatus: 'loading', coords: '',
+      lat: null, lng: null, timestamp: '', hashId: '', confirmed: false
+    },
+
+    finance: {
+      startPharmacies: 1,
+      patientsPerPharmacy: 500,
+      npMonthlyCost: 12000,
+      pharmacyReimbursementRate: 25,
+      enableRecovery: false,
+      rate98975: 19.65,
+      rate98977: 51.00,
+      rate98980: 54.11,
+      showActuals: false,          // v2: actuals overlay toggle
+      riskMix: { red: 20, yellow: 40, green: 40 },
+      riskMinutes: { red: 35, yellow: 22, green: 12 }
+    },
+
+    // ─── Init ─────────────────────────────────────────────────
+    init() {
+      this.initThemePreference();
+      this.triagePatients = [];
+      this.pharmacyPatients = [];
+      this.auditTrail = [];
+      this.setupInactivityTimer();
+      this.$watch('page', value => this.onPersonaChange(value));
+      window.addEventListener('resize', () => { if (this.tourActive) this.updateTourPosition(); });
+      const seeded = localStorage.getItem('qcrxDemoSeeded') === 'true';
+      this.demoSeeded = seeded;
+      setTimeout(() => {
+        if (seeded) this.loadDemoPatients(true);
+        this.isLoading = false;
+        this.applyRouteFromUrl();
+      }, 700);
+      window.addEventListener('beforeunload', (event) => {
+        if (this.showPatientPanel && !this.encounterApproved && this.timerSeconds > 0) {
+          event.preventDefault();
+          event.returnValue = '';
+        }
+      });
+    },
+
+    // ─── Demo Seeding ─────────────────────────────────────────
+    seedTriagePatients() {
+      return DEMO_PATIENTS.map(patient => ({
+        ...patient,
+        disenrolled: false,
+        disenrollReason: '',
+        disenrollDate: '',
+        disenrollNotes: '',
+        monitoring: 'SMS',
+        smsLogs: [
+          { id: `${patient.id}-sms-1`, timestamp: `${patient.lastContact} — 09:00 AM`, channel: 'SMS', detail: 'Daily adherence ping sent. Patient replied: TAKEN.' }
+        ],
+        ivrLogs: [
+          { id: `${patient.id}-ivr-1`, timestamp: `${patient.lastContact} — 09:05 AM`, channel: 'IVR', detail: 'Call Successful - Key 1 Pressed' }
+        ],
+        manualCommLogs: [],
+        narrativeLogs: [],
+        auditLog: this.generateAuditLog(patient)
+      }));
+    },
+    seedPharmacyPatients() {
+      return this.triagePatients.map(patient => ({
+        id: patient.id, name: patient.name, diagnosis: patient.diagnosis,
+        gpsVerified: patient.deliveryVerified, rxSafeBatch: patient.rxsafeBatchId,
+        deliveryTimestamp: patient.deliveryTimestamp, deliveryGps: patient.deliveryGps,
+        deliveryStatus: patient.deliveryVerified ? 'Completed' : (Math.random() > 0.5 ? 'In Transit' : 'Pending')
+      }));
+    },
+    seedAuditTrail() {
+      return this.triagePatients.slice(0, 3).map(patient => ({
+        batchId: patient.rxsafeBatchId,
+        monitoringId: `Monitor-${patient.id}-${Math.floor(Math.random() * 9000)}`
+      }));
+    },
+    loadDemoPatients(quiet = false) {
+      this.triagePatients = this.seedTriagePatients();
+      this.pharmacyPatients = this.seedPharmacyPatients();
+      this.auditTrail = this.seedAuditTrail();
+      this.demoSeeded = true;
+      localStorage.setItem('qcrxDemoSeeded', 'true');
+      this.setTriagePage(1);
+      if (!quiet) this.notify('Demo patients loaded.');
+    },
+    applyRouteFromUrl() {
+      const url = new URL(window.location.href);
+      if (url.pathname.includes('/delivery')) {
+        this.page = 'delivery';
+        this.deliveryState.patientId = url.searchParams.get('patient') || this.triagePatients[0]?.id || '';
+        this.initDeliveryView();
+      }
+    },
+
+    // ─── v2: Engagement Inbox ──────────────────────────────────
+    inboxAlerts() {
+      const urgentKeywords = ['HELP','DIZZY','PAIN','SWOLLEN','CHEST','BREATH','FALL','BLEED','URGENT'];
+      const reviewKeywords = ['TIRED','NAUSEA','HEADACHE','CONFUSED','WEAK','SHORT OF BREATH','FEET SWOLLEN'];
+      const alerts = [];
+      this.triagePatients.filter(p => !p.disenrolled).forEach(patient => {
+        patient.symptomKeywords.forEach(kw => {
+          const upper = kw.toUpperCase();
+          const isUrgent = urgentKeywords.some(u => upper.includes(u));
+          const isReview = reviewKeywords.some(r => upper.includes(r));
+          if (isUrgent || isReview) {
+            alerts.push({
+              patientId: patient.id,
+              patientName: patient.name,
+              keyword: kw,
+              urgent: isUrgent,
+              timestamp: patient.lastContact + ' — 09:00 AM',
+              message: `Patient triggered keyword "${kw}" via SMS. NP review ${isUrgent ? 'required within 24 hours' : 'recommended'}.`,
+              status: 'Pending'
+            });
+          }
+        });
+      });
+      return alerts.sort((a, b) => b.urgent - a.urgent);
+    },
+    urgentInboxCount() {
+      return this.inboxAlerts().filter(a => a.urgent).length;
+    },
+    jumpToPatient(patientId) {
+      const patient = this.triagePatients.find(p => p.id === patientId);
+      if (patient) {
+        this.activePatient = patient;
+        this.page = 'clinical';
+      }
+    },
+
+    // ─── v2: Disenrollment ────────────────────────────────────
+    openDisenrollModal(patient) {
+      this.disenrollTarget = patient;
+      this.disenrollForm = { reason: '', finalDate: '', notes: '' };
+      this.showDisenrollModal = true;
+    },
+    confirmDisenroll() {
+      if (!this.disenrollTarget || !this.disenrollForm.reason || !this.disenrollForm.finalDate) return;
+      const patient = this.disenrollTarget;
+      patient.disenrolled = true;
+      patient.disenrollReason = this.disenrollForm.reason;
+      patient.disenrollDate = this.disenrollForm.finalDate;
+      patient.disenrollNotes = this.disenrollForm.notes;
+      // Determine final billing
+      const finalBilling98977 = patient.adherenceDays >= 16 ? 'Full 98977' : 'Prorated 98977';
+      const finalBilling98980 = patient.npMinutesLogged >= 20 ? `98980 — ${this.formatCurrency(this.finance.rate98980)}` : `Partial 98979 (${patient.npMinutesLogged} min)`;
+      if (!patient.auditLog) patient.auditLog = [];
+      patient.auditLog.unshift({
+        timestamp: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' —'),
+        type: 'EPISODE CLOSED',
+        typeBadge: 'bg-rose-700',
+        description: `Episode closed. Reason: ${patient.disenrollReason}. Final encounter: ${patient.disenrollDate}. Billing: ${finalBilling98977} + ${finalBilling98980}.${patient.disenrollNotes ? ' Notes: ' + patient.disenrollNotes : ''}`,
+        hashId: `SHA:DISENROLL-${patient.id}-${Date.now()}`,
+        icon: '🚪'
+      });
+      this.showDisenrollModal = false;
+      this.disenrollTarget = null;
+      this.notify(`Episode closed for ${patient.name}.`);
+    },
+
+    // ─── v2: Cycle Progress ───────────────────────────────────
+    cycleStatusLabel(patient) {
+      if (!patient) return '';
+      const pct = Math.round((patient.adherenceDays / 30) * 100);
+      if (pct >= 80) return 'On Track';
+      if (pct >= 50) return 'In Progress';
+      if (patient.adherenceDays >= patient.adherenceTarget) return 'Threshold Met';
+      return 'Behind';
+    },
+    cycleStatusColor(patient) {
+      if (!patient) return 'text-[#64748B]';
+      const days = patient.adherenceDays;
+      if (days >= patient.adherenceTarget) return 'text-emerald-700';
+      if (days >= 12) return 'text-amber-700';
+      return 'text-rose-700';
+    },
+    cycleBarColor(patient) {
+      if (!patient) return 'bg-slate-300';
+      const days = patient.adherenceDays;
+      if (days >= patient.adherenceTarget) return 'bg-emerald-500';
+      if (days >= 12) return 'bg-amber-400';
+      return 'bg-rose-500';
+    },
+
+    // ─── v2: Communication Log ────────────────────────────────
+    fullCommLog(patient) {
+      if (!patient) return [];
+      const sms = (patient.smsLogs || []).map(e => ({ ...e, id: e.id || Math.random() }));
+      const ivr = (patient.ivrLogs || []).map(e => ({ ...e, id: e.id || Math.random() }));
+      const manual = (patient.manualCommLogs || []).map(e => ({ ...e, channel: 'Manual NP' }));
+      return [...sms, ...ivr, ...manual].sort((a, b) => {
+        const ta = new Date(a.timestamp.replace(' — ', ' ')).getTime() || 0;
+        const tb = new Date(b.timestamp.replace(' — ', ' ')).getTime() || 0;
+        return tb - ta;
+      });
+    },
+    addCommLogEntry() {
+      if (!this.activePatient || !this.newCommLogEntry.trim()) {
+        this.notify('Enter a note before logging.');
+        return;
+      }
+      if (!this.activePatient.manualCommLogs) this.activePatient.manualCommLogs = [];
+      this.activePatient.manualCommLogs.unshift({
+        id: Date.now(),
+        timestamp: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' —'),
+        channel: 'Manual NP',
+        detail: this.newCommLogEntry.trim(),
+        hash: ''
+      });
+      if (!this.activePatient.auditLog) this.activePatient.auditLog = [];
+      this.activePatient.auditLog.unshift({
+        timestamp: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' —'),
+        type: 'COMM LOG',
+        typeBadge: 'bg-indigo-700',
+        description: `Manual NP communication logged: ${this.newCommLogEntry.trim()}`,
+        hashId: `SHA:COMM-${Date.now()}`,
+        icon: '💬'
+      });
+      this.newCommLogEntry = '';
+      this.notify('Communication entry logged.');
+    },
+
+    // ─── v2: Batch CMS 1500 Export ────────────────────────────
+    batchExportRows() {
+      const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+      const rows = [];
+      this.triagePatients.filter(p => this.billingReady(p) && !p.disenrolled).forEach(p => {
+        rows.push({
+          patientId: p.id, patientName: p.name, dob: p.dob, icd10: p.icd10,
+          cpt: '98975', dos: p.enrollmentDate || today, units: 1, amount: this.finance.rate98975
+        });
+        if (p.adherenceDays >= 16) {
+          rows.push({
+            patientId: p.id, patientName: p.name, dob: p.dob, icd10: p.icd10,
+            cpt: '98977', dos: today, units: 1, amount: this.finance.rate98977
+          });
+        }
+        if (p.npMinutesLogged >= 20) {
+          rows.push({
+            patientId: p.id, patientName: p.name, dob: p.dob, icd10: p.icd10,
+            cpt: '98980', dos: today, units: 1, amount: this.finance.rate98980
+          });
+        }
+      });
+      return rows;
+    },
+    batchEstimatedTotal() {
+      return this.batchExportRows().reduce((sum, r) => sum + r.amount, 0);
+    },
+    previewBatchExport() {
+      if (this.triagePatients.filter(p => this.billingReady(p) && !p.disenrolled).length === 0) {
+        this.notify('No READY patients to export. Load demo patients first.');
+        return;
+      }
+      this.showBatchPreview = !this.showBatchPreview;
+    },
+    downloadBatchCMS1500() {
+      const rows = this.batchExportRows();
+      if (!rows.length) {
+        this.notify('No READY patients to export.');
+        return;
+      }
+      const headers = ['Patient ID','Patient Name','DOB','ICD-10','CPT Code','Date of Service','Units','Amount'];
+      const csvRows = [headers.join(',')];
+      rows.forEach(r => {
+        csvRows.push([r.patientId, `"${r.patientName}"`, r.dob, r.icd10, r.cpt, r.dos, r.units, r.amount.toFixed(2)].join(','));
+      });
+      const csv = csvRows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `QCRx-Batch-CMS1500-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      this.notify(`Downloaded ${rows.length} billing rows.`);
+    },
+
+    // ─── v2: Revenue Actuals Overlay ─────────────────────────
+    actualsVariancePct() {
+      const model = this.pilotPatientCount();
+      if (!model) return 0;
+      const actual = this.triagePatients.filter(p => !p.disenrolled).length;
+      return ((actual - model) / model) * 100;
+    },
+    actualsVarianceDriver() {
+      const enrolled = this.triagePatients.filter(p => !p.disenrolled).length;
+      const ready = this.triagePatients.filter(p => this.billingReady(p) && !p.disenrolled).length;
+      const model = this.pilotPatientCount();
+      if (enrolled === 0) return 'No patients enrolled yet — load demo patients to see actuals.';
+      if (enrolled < model * 0.5) return `Enrollment lag — only ${enrolled} of ${model} modeled patients enrolled. Focus on pharmacy onboarding.`;
+      if (ready < enrolled * 0.5) return `Billing readiness gap — ${ready} of ${enrolled} enrolled patients are READY. Increase NP engagement minutes.`;
+      if (ready >= enrolled * 0.8) return `Strong billing readiness — ${ready} of ${enrolled} patients READY to bill. On track with model.`;
+      return `Adherence gap — ${enrolled - ready} patients enrolled but not yet billing-ready. Monitor 16-day transmission thresholds.`;
+    },
+
+    // ─── Revenue Calculations ─────────────────────────────────
+    revenueRecoveryMultiplier() { return this.finance.enableRecovery ? 1.15 : 1; },
+    applyRevenueRecovery(value) { return value * this.revenueRecoveryMultiplier(); },
+    monthlyRecurringPerPatient() { return this.finance.rate98977 + this.finance.rate98980; },
+    pilotPatientCount() { return this.finance.startPharmacies * this.finance.patientsPerPharmacy; },
+    totalRiskMix() { return this.finance.riskMix.red + this.finance.riskMix.yellow + this.finance.riskMix.green; },
+    normalizeRiskMix(changed) {
+      const mix = this.finance.riskMix;
+      const clamp = v => Math.min(100, Math.max(0, Math.round(v)));
+      mix[changed] = clamp(mix[changed]);
+      const keys = ['red','yellow','green'];
+      const others = keys.filter(k => k !== changed);
+      let remaining = 100 - mix[changed];
+      if (remaining <= 0) { mix[others[0]] = 0; mix[others[1]] = 0; return; }
+      const currentSum = others.reduce((s, k) => s + mix[k], 0);
+      if (currentSum === 0) { mix[others[0]] = Math.round(remaining / 2); mix[others[1]] = remaining - mix[others[0]]; return; }
+      mix[others[0]] = Math.round((mix[others[0]] / currentSum) * remaining);
+      mix[others[1]] = remaining - mix[others[0]];
+      mix[others[0]] = clamp(mix[others[0]]);
+      mix[others[1]] = clamp(mix[others[1]]);
+    },
+    blendedAvgMinutes() {
+      const { riskMix: m, riskMinutes: min } = this.finance;
+      return ((m.red * min.red) + (m.yellow * min.yellow) + (m.green * min.green)) / 100;
+    },
+    patientsPerNp() {
+      const avg = this.blendedAvgMinutes();
+      return avg > 0 ? 6720 / avg : 0;
+    },
+    npRequiredForPatients(total) {
+      if (total <= 0) return 0;
+      const cap = this.patientsPerNp();
+      return cap > 0 ? Math.max(1, Math.ceil(total / cap)) : 0;
+    },
+    npLoadForPatients(total) {
+      const np = this.npRequiredForPatients(total);
+      return np > 0 ? total / np : 0;
+    },
+    npLoadStatus() {
+      const load = this.npLoadForPatients(this.pilotPatientCount());
+      if (load > 380) return { label: 'RED', className: 'bg-rose-50 text-rose-700 border-rose-200', note: 'Consider adding NP headcount' };
+      if (load >= 300) return { label: 'YELLOW', className: 'bg-amber-50 text-amber-700 border-amber-200', note: '' };
+      return { label: 'GREEN', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', note: '' };
+    },
+    npLaborCostForPatients(total) { return this.npRequiredForPatients(total) * this.finance.npMonthlyCost; },
+    livePilotGrossRevenue() { return this.applyRevenueRecovery(this.pilotPatientCount() * (this.finance.rate98977 + this.finance.rate98980)); },
+    livePilotLogisticsPayout() { return this.pilotPatientCount() * this.finance.pharmacyReimbursementRate; },
+    livePilotLaborCost() { return this.npLaborCostForPatients(this.pilotPatientCount()); },
+    livePilotNetProfit() { return this.livePilotGrossRevenue() - this.livePilotLogisticsPayout() - this.livePilotLaborCost(); },
+    yearProjection(year) {
+      const growth = year === 1 ? 2 : 5;
+      const start = year === 1 ? this.finance.startPharmacies : this.finance.startPharmacies + 24;
+      let total = 0, pharmacies = start;
+      for (let m = 1; m <= 12; m++) {
+        const newP = m === 1 ? 0 : growth;
+        pharmacies += newP;
+        const patients = pharmacies * this.finance.patientsPerPharmacy;
+        const rev = this.applyRevenueRecovery(newP * this.finance.patientsPerPharmacy * this.finance.rate98975 + patients * this.monthlyRecurringPerPatient());
+        total += rev - (patients * this.finance.pharmacyReimbursementRate) - this.npLaborCostForPatients(patients);
+      }
+      return { total, pharmaciesEnd: pharmacies };
+    },
+    buildMonthlyRevenueTimeline() {
+      const labels = [], values = [];
+      let pharmacies = this.finance.startPharmacies, cumulative = 0;
+      for (let m = 1; m <= 24; m++) {
+        const growth = m === 1 ? 0 : (m <= 12 ? 2 : 5);
+        pharmacies += growth;
+        const patients = pharmacies * this.finance.patientsPerPharmacy;
+        const rev = this.applyRevenueRecovery(growth * this.finance.patientsPerPharmacy * this.finance.rate98975 + patients * this.monthlyRecurringPerPatient());
+        const net = rev - (patients * this.finance.pharmacyReimbursementRate) - this.npLaborCostForPatients(patients);
+        cumulative += net;
+        labels.push(`M${m}`);
+        values.push(Math.round(cumulative));
+      }
+      return { labels, values };
+    },
+    updateRevenueChart() {
+      if (!this.$refs.revenueChart) return;
+      const { labels, values } = this.buildMonthlyRevenueTimeline();
+      const dataset = { label: 'Cumulative Net Revenue', data: values, fill: true, tension: 0.35, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.2)', pointRadius: 0 };
+      if (this.revenueChart) { this.revenueChart.data.labels = labels; this.revenueChart.data.datasets = [dataset]; this.revenueChart.update('none'); return; }
+      const ctx = this.$refs.revenueChart.getContext('2d');
+      this.revenueChart = new Chart(ctx, {
+        type: 'line', data: { labels, datasets: [dataset] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => this.formatCurrency(ctx.raw) } } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#94A3B8' } },
+            y: { ticks: { color: '#94A3B8', callback: v => this.formatCurrency(v) }, grid: { color: 'rgba(148,163,184,0.2)' } }
+          }
+        }
+      });
+    },
+
+    // ─── Risk / Billing Helpers ───────────────────────────────
+    riskStatus(patient) { return patient ? (patient.riskStatus || 'GREEN').toLowerCase() : 'green'; },
+    riskBadge(patient) {
+      const s = this.riskStatus(patient);
+      if (s === 'red') return 'bg-white text-rose-700 border border-rose-200';
+      if (s === 'yellow') return 'bg-white text-amber-700 border border-amber-200';
+      return 'bg-white text-emerald-700 border border-emerald-200';
+    },
+    riskRowClass() { return 'risk-row bg-[#ffffff] border-[#E2E8F0] hover:bg-[#F0F4FF]'; },
+    critical98977(p) { return p && (p.adherenceDays === 14 || p.adherenceDays === 15); },
+    needs98977(p) { return p && p.adherenceDays < p.adherenceTarget; },
+    is98977Urgent(p) { return p && this.daysRemainingInCycle(p) <= 2 && this.needs98977(p); },
+    daysRemainingInCycle(p) { return p ? Math.max(0, p.adherenceTarget - p.adherenceDays) : 0; },
+    billingMinutes(p) { return p ? (p.npMinutesLogged || 0) : 0; },
+    billingReady(p) { return p ? (p.billingStatus === 'READY_TO_BILL' || this.billingMinutes(p) >= (p.npMinutesTarget || 20)) : false; },
+    readyToBillCount() { return this.triagePatients.filter(p => this.billingReady(p) && !p.disenrolled).length; },
+    watchlistCount() { return this.triagePatients.filter(p => this.critical98977(p)).length; },
+    coinsuranceBadge(patient) {
+      const s = patient?.coinsuranceStatus || '';
+      if (s.includes('MEDIGAP') || s.includes('$0 copay')) return { label: '✅ $0 Copay (Medigap)', class: 'bg-emerald-50 text-emerald-700 border border-emerald-100' };
+      if (s.includes('ORIGINAL MEDICARE')) return { label: '⚠ ~$21/mo Copay', class: 'bg-amber-50 text-amber-700 border border-amber-100' };
+      if (s.includes('MEDICARE ADVANTAGE')) return { label: 'ℹ Verify Copay', class: 'bg-blue-50 text-blue-700 border border-blue-100' };
+      return { label: 'ℹ Verify Copay', class: 'bg-slate-100 text-slate-600 border border-slate-200' };
+    },
+
+    // ─── Triage Pagination ────────────────────────────────────
+    paginatedPatients() {
+      const patients = this.sortedPatients();
+      const start = (this.triagePage - 1) * this.triagePerPage;
+      return patients.slice(start, start + this.triagePerPage);
+    },
+    triageTotalPages() { return Math.max(1, Math.ceil(this.triagePatients.length / this.triagePerPage)); },
+    triagePageRange() {
+      const total = this.triagePatients.length;
+      if (!total) return { start: 0, end: 0, total: 0 };
+      return { start: (this.triagePage - 1) * this.triagePerPage + 1, end: Math.min(total, this.triagePage * this.triagePerPage), total };
+    },
+    setTriagePage(page) { this.triagePage = Math.min(Math.max(1, page), this.triageTotalPages()); },
+    nextTriagePage() { this.setTriagePage(this.triagePage + 1); },
+    prevTriagePage() { this.setTriagePage(this.triagePage - 1); },
+    sortedPatients() {
+      const order = { red: 1, yellow: 2, green: 3 };
+      const patients = [...this.triagePatients];
+      if (this.triageSort === 'adherence') return patients.sort((a,b) => b.adherenceDays - a.adherenceDays || a.name.localeCompare(b.name));
+      if (this.triageSort === 'billing') return patients.sort((a,b) => Number(this.billingReady(b)) - Number(this.billingReady(a)) || this.billingMinutes(b) - this.billingMinutes(a) || a.name.localeCompare(b.name));
+      return patients.sort((a,b) => { const sa = this.riskStatus(a), sb = this.riskStatus(b); return order[sa] !== order[sb] ? order[sa] - order[sb] : a.name.localeCompare(b.name); });
+    },
+
+    // ─── Lifecycle Stages ────────────────────────────────────
+    lifecycleStages(patient) {
+      if (!patient) return [];
+      const completed = [
+        patient.lifecycleStage?.includes('consent'),
+        patient.lifecycleStage?.includes('delivered'),
+        patient.adherenceDays >= patient.adherenceTarget,
+        patient.npMinutesLogged >= patient.npMinutesTarget,
+        patient.billingStatus === 'READY_TO_BILL'
+      ];
+      const firstIncomplete = completed.findIndex(d => !d);
+      const build = (label, emoji, index) => {
+        const done = completed[index];
+        const current = !done && firstIncomplete === index;
+        return { label: `${done ? '✅' : emoji} ${label}`, status: done ? 'completed' : (current ? 'current' : 'future'), pulse: done && index === 4 };
+      };
+      return [
+        build('Consent','🧾',0), build('Delivered','📦',1),
+        build(`${patient.adherenceDays}/${patient.adherenceTarget} Days`,'📱',2),
+        build(`${patient.npMinutesLogged}/${patient.npMinutesTarget} Min`,'⏱',3),
+        build('BILL READY','💰',4)
+      ];
+    },
+    stagePillClass(stage) {
+      if (stage.status === 'completed') return `bg-[#16A34A] text-white ${stage.pulse ? 'pulse-green' : ''}`;
+      if (stage.status === 'current') return 'bg-amber-50 text-amber-700 border border-amber-200';
+      return 'bg-white text-[#64748B] border border-slate-200';
+    },
+
+    // ─── Patient Encounter ────────────────────────────────────
+    openPatient(patient) {
+      this.activePatient = patient;
+      this.showPatientPanel = true;
+      this.encounterApproved = false;
+      this.encounterStep = 1;
+      this.identityConfirmed = false;
+      this.vitalsReviewed = false;
+      this.aiReviewed = false;
+      this.logAcknowledged = false;
+      this.pendingAuditHash = '';
+      this.newCommLogEntry = '';
+      this.resetClinicalTimer();
+      this.startClinicalTimer();
+      this.aiDraftMinutes = 0;
+      this.aiSummary = '';
+      this.aiFlags = [];
+      this.aiUrgent = false;
+      this.callGlassHealth(patient);
+      this.buildTwilioAuditLog(patient);
+    },
+    encounterProgress() {
+      return this.encounterSteps.length <= 1 ? 0 : Math.round(((this.encounterStep - 1) / (this.encounterSteps.length - 1)) * 100);
+    },
+    canAdvanceEncounter() {
+      if (this.encounterStep === 1) return this.identityConfirmed;
+      if (this.encounterStep === 2) return this.vitalsReviewed;
+      if (this.encounterStep === 3) return !this.aiLoading && this.aiSummary && this.aiReviewed;
+      if (this.encounterStep === 4) return this.aiDraftNote && this.aiDraftNote.trim().length > 0;
+      return false;
+    },
+    canApproveEncounter() { return this.encounterStep === 5 && this.logAcknowledged && this.aiDraftNote && this.aiDraftNote.trim().length > 0; },
+    async prepareEncounterHash() {
+      if (!this.aiDraftNote) { this.pendingAuditHash = ''; return; }
+      const hash = await this.sha256Hex(`${this.aiDraftNote.trim()}${new Date().toISOString()}NP Reviewer`);
+      this.pendingAuditHash = hash.slice(0, 18);
+    },
+    nextEncounterStep() {
+      if (!this.canAdvanceEncounter()) { this.notify('Complete this step before advancing.'); return; }
+      this.encounterStep = Math.min(this.encounterSteps.length, this.encounterStep + 1);
+      if (this.encounterStep === 5) this.prepareEncounterHash();
+    },
+    prevEncounterStep() { this.encounterStep = Math.max(1, this.encounterStep - 1); },
+    closePatientPanel() { if (!this.confirmLeaveEncounter()) return; this.showPatientPanel = false; this.stopClinicalTimer(); },
+
+    // ─── Contact Overlay ──────────────────────────────────────
+    openContactOverlay(patient) {
+      if (!patient) return;
+      this.contactPatient = patient;
+      this.activePatient = patient;
+      this.contactSid = this.generateTwilioSid();
+      this.contactTimestamp = new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' —');
+      if (!patient.auditLog) patient.auditLog = [];
+      patient.auditLog.unshift({ timestamp: this.contactTimestamp, type: 'SYNC INTERACTION', typeBadge: 'bg-teal-700', description: `Synchronous interaction logged. Twilio SID: ${this.contactSid}.`, hashId: `SHA:${this.contactSid}`, icon: '📞' });
+      this.showContactOverlay = true;
+    },
+    closeContactOverlay() { this.showContactOverlay = false; },
+    toggleMonitoring(patient) { if (patient) patient.monitoring = patient.monitoring === 'SMS' ? 'Voice/IVR' : 'SMS'; },
+    engagementLogs(patient) {
+      if (!patient) return [];
+      if (patient.monitoring === 'SMS') return patient.smsLogs || [];
+      return (patient.ivrLogs || []).map(e => ({ ...e, detail: 'IVR System: Voice Call Successful (Key 1 Pressed)' }));
+    },
+
+    // ─── Vitals / Sparklines ──────────────────────────────────
+    sparklinePoints(series, width=160, height=48, padding=4) {
+      if (!series?.length) return '';
+      const min = Math.min(...series), max = Math.max(...series), range = max - min || 1;
+      const step = (width - padding*2) / Math.max(1, series.length - 1);
+      return series.map((v,i) => `${padding + i*step},${height - padding - ((v-min)/range)*(height-padding*2)}`).join(' ');
+    },
+    latestTrendValue(series) { return series?.length ? series[series.length-1] : '—'; },
+    trendDelta(series) { if (!series || series.length < 2) return '0'; const d = series[series.length-1] - series[0]; return (d>0?'+':'') + d; },
+    vitalsDeltaFlag(patient, type) {
+      if (!patient) return { label: '', class: 'text-[#64748B]' };
+      if (type === 'weight') {
+        const d = patient.weight[patient.weight.length-1] - patient.weight[0];
+        if (d >= 8) return { label: `Warning: Rapid weight gain (+${d} lbs/7d)`, class: 'text-rose-600' };
+        if (d >= 4) return { label: `Caution: Weight trending up (+${d} lbs/7d)`, class: 'text-amber-600' };
+        if (d <= -4) return { label: `Improving: Weight trending down (${d} lbs/7d)`, class: 'text-emerald-600' };
+        return { label: `AI Flag: Weight stable (${d>0?'+':''}${d} lbs/7d)`, class: 'text-[#0F766E]' };
+      }
+      const d = patient.systolicBp[patient.systolicBp.length-1] - patient.systolicBp[0];
+      if (d >= 15) return { label: `Warning: BP rising rapidly (+${d} mmHg systolic)`, class: 'text-rose-600' };
+      if (d >= 8) return { label: `Caution: BP trending upward (+${d} mmHg systolic)`, class: 'text-amber-600' };
+      if (d <= -8) return { label: `Improving: BP trending down (${d} mmHg systolic)`, class: 'text-emerald-600' };
+      return { label: `AI Flag: BP stable (${d>0?'+':''}${d} mmHg systolic)`, class: 'text-[#2563EB]' };
+    },
+
+    // ─── Timer ────────────────────────────────────────────────
+    timerDisplay() { const m = Math.floor(this.timerSeconds/60), s = this.timerSeconds%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; },
+    timerMinutes() { return Math.floor(this.timerSeconds/60); },
+    startClinicalTimer() {
+      if (this.timerRunning || !this.showPatientPanel || !this.activePatient) return;
+      this.timerRunning = true;
+      this.timerInterval = setInterval(() => { if (!this.showPatientPanel || !this.activePatient) { this.stopClinicalTimer(); return; } this.timerSeconds++; }, 1000);
+    },
+    stopClinicalTimer() { if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; } this.timerRunning = false; },
+    resetClinicalTimer() { this.stopClinicalTimer(); this.timerSeconds = 0; },
+    totalMinutes(patient) { return patient ? (patient.npMinutesLogged || 0) : 0; },
+
+    // ─── Narrative / Audit ────────────────────────────────────
+    appendLogEntry(patient, minutes, note, auditHash='') {
+      if (!patient) return;
+      if (!patient.narrativeLogs) patient.narrativeLogs = [];
+      patient.narrativeLogs.unshift({ id: Date.now() + Math.floor(Math.random()*1000), timestamp: new Date().toISOString().slice(0,16).replace('T',' '), minutes, note, hashed: true, auditHash });
+      patient.npMinutesLogged = (patient.npMinutesLogged || 0) + minutes;
+    },
+    generateAuditHash() { return `qcrx_hash_${Math.floor(Math.random()*1e6).toString().padStart(6,'0')}`; },
+    generateTwilioSid() { return `SM${Math.random().toString(16).slice(2,10).toUpperCase()}${Date.now().toString(16).slice(-8).toUpperCase()}`; },
+    draftNarrative() {
+      if (!this.activePatient) return;
+      this.aiLoading = true;
+      setTimeout(() => this.callGlassHealth(this.activePatient), 600);
+      this.notify('Regenerating clinical draft.');
+      if (this.encounterStep === 5) this.prepareEncounterHash();
+    },
+    buildGlassQuery(patient) {
+      const symptomText = patient.symptomKeywords.length > 0 ? `Recent reported symptoms via SMS: ${patient.symptomKeywords.join(', ')}.` : 'No symptom keywords reported.';
+      const bpTrend = patient.systolicBp.map((s,i) => `${s}/${patient.diastolicBp[i]}`).join(', ');
+      const missedNote = patient.missedDoses > 0 ? `Patient has missed ${patient.missedDoses} dose(s). Last missed: ${patient.lastMissed}.` : 'Patient has been fully adherent this cycle.';
+      return { query: `You are assisting a nurse practitioner conducting a monthly RTM review under CPT code 98980. Generate: 1. A concise AI Clinical Summary (3-4 sentences). 2. A CMS-compliant RTM progress note. Patient: ${patient.name}, Age: ${patient.age}, Diagnosis: ${patient.diagnosis} (${patient.icd10}), Meds: ${patient.medications.join(', ')}, RTM: ${patient.adherenceDays}/${patient.adherenceTarget} days, ${missedNote} ${symptomText} BP trend: ${bpTrend}. Weight: ${patient.weight.join(', ')} lbs. NP time: ${patient.npMinutesLogged} min. Insurance: ${patient.coinsuranceStatus}. FORMAT AS JSON: {"summary":"...","narrative":"...","flags":[],"billingReadiness":"READY|PENDING_MINUTES|PENDING_DATA|ESCALATE"}` };
+    },
+    async callGlassHealth(patient) {
+      if (!patient) return;
+      this.aiLoading = true;
+      this.aiSummary = '';
+      this.aiDraftNote = '';
+      this.aiFlags = [];
+      this.aiUrgent = false;
+      this.aiReviewed = false;
+      const query = this.buildGlassQuery(patient);
+      try {
+        const response = await fetch('/.netlify/functions/glass-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(query) });
+        if (!response.ok) throw new Error(`Glass API error: ${response.status}`);
+        const data = await response.json();
+        const raw = data.response || data.content || data.text || '';
+        const jsonMatch = raw.match(/```json\n?([\s\S]*?)\n?```/);
+        const jsonText = jsonMatch ? jsonMatch[1] : raw;
+        let parsed;
+        try { parsed = JSON.parse(jsonText); } catch { parsed = { summary: 'AI summary generated.', narrative: raw || 'Unable to parse AI response.', flags: [], billingReadiness: 'PENDING_REVIEW' }; }
+        this.aiSummary = parsed.summary || '';
+        this.aiDraftNote = parsed.narrative || '';
+        this.aiFlags = parsed.flags || [];
+        this.aiUrgent = this.aiFlags.some(f => f.toLowerCase().includes('urgent') || f.toLowerCase().includes('immediate'));
+      } catch (err) {
+        this.aiSummary = this.getMockSummary(patient);
+        this.aiDraftNote = this.getMockNarrative(patient);
+        this.aiFlags = this.getMockFlags(patient);
+        this.aiUrgent = this.aiFlags.some(f => f.toLowerCase().includes('urgent') || f.toLowerCase().includes('immediate'));
+        console.warn('Glass Health API unavailable — using mock narrative:', err.message);
+      } finally {
+        this.aiLoading = false;
+        if (this.encounterStep === 5) this.prepareEncounterHash();
+      }
+    },
+    getMockSummary(patient) {
+      const summaries = {
+        "PT-001": "Patient Garcia reports dizziness and fatigue over the past 3 days, with BP trending elevated (peak 158/98 mmHg). Three missed doses places 98977 fulfillment at risk. Clinical intervention indicated today.",
+        "PT-002": "Patient Smith is fully adherent with 16/16 monitoring days logged. BP improved from 138/85 to 132/82 mmHg. No symptom concerns. 98977 and 98980 thresholds met — ready for billing.",
+        "PT-003": "Patient Johnson reports shortness of breath on Feb 17. One missed dose; 11 of 16 monitoring days logged. NP review recommended to assess dyspnea and confirm inhaler technique.",
+        "PT-004": "URGENT: Patient Williams reports bilateral foot swelling and submitted HELP keyword. Weight trending +11 lbs over 7 days. BP critically elevated at 170/106 mmHg. Five missed doses. Immediate NP intervention required.",
+        "PT-005": "Patient Brown is fully adherent with excellent glycemic and BP control. No symptom concerns. Weight stable. All RTM thresholds met. Ready for billing."
+      };
+      return summaries[patient.id] || "AI clinical summary unavailable. Please review patient record manually.";
+    },
+    getMockNarrative(patient) {
+      const n = {
+        "PT-004": `RTM ESCALATION NOTE — URGENT\nDate: February 20, 2026\n\nUrgent RTM review for Patricia Williams, 75-year-old female with Heart Failure (I50.9).\n\nADHERENCE ALERT: Patient missed 5 doses. Patient submitted HELP keyword with bilateral foot swelling on February 19.\n\nVitals: CRITICAL — BP trending 155/96 to 170/106 mmHg. Weight increased 11 lbs in 7 days (192 → 203 lbs) indicating fluid retention.\n\nAssessment: Weight gain with foot swelling, worsening hypertension, and Furosemide non-adherence consistent with decompensated heart failure.\n\nAction: Patient contacted by phone. Patient confirmed bilateral swelling and dyspnea at rest. Instructed to take Furosemide immediately. Prescribing physician notified.\n\nPlan: Patient advised to go to ED if dyspnea worsens. Monitoring frequency increased to twice daily.\n\n[NP Signature] [Date] [NPI]`
+      };
+      return n[patient.id] || `RTM Monthly Management Encounter — CPT 98980\nDate of Service: February 20, 2026\n\nI conducted a remote therapeutic monitoring review for ${patient.name}, a ${patient.age}-year-old enrolled in the QCRx RTM program for ${patient.diagnosis}.\n\nAdherence Review: Patient has logged ${patient.adherenceDays} of ${patient.adherenceTarget} required monitoring days this cycle. ${patient.missedDoses > 0 ? `${patient.missedDoses} missed dose(s) recorded.` : 'No missed doses this cycle.'}\n\n${patient.symptomKeywords.length ? `Reported symptoms: ${patient.symptomKeywords.join(', ')}.` : 'No symptom concerns reported.'}\n\nVitals Trend: BP ${patient.systolicBp[0]}/${patient.diastolicBp[0]} to ${patient.systolicBp[patient.systolicBp.length-1]}/${patient.diastolicBp[patient.diastolicBp.length-1]} mmHg over 7 days. Weight stable.\n\nIntervention: Monthly RTM check-in completed. Patient education provided on medication adherence.\n\nPlan: Continue current regimen. Next RTM cycle to begin following month.\n\nTime: ${patient.npMinutesLogged} accumulated minutes logged toward 98980.\n\n[NP Signature] [Date] [NPI]`;
+    },
+    getMockFlags(patient) {
+      const flags = { "PT-001": ["Elevated BP trend with dizziness","3 missed doses in current cycle"], "PT-002": [], "PT-003": ["Shortness of breath reported on Feb 17"], "PT-004": ["URGENT: Possible decompensated heart failure","Weight gain +11 lbs in 7 days","Critical BP 170/106"], "PT-005": [] };
+      return flags[patient.id] || [];
+    },
+    async approveAndLog() {
+      if (!this.activePatient || !this.aiDraftNote.trim() || !this.canApproveEncounter()) { this.notify('Confirm log & hash before approval.'); return; }
+      const minutes = this.timerMinutes();
+      const timestamp = new Date().toISOString();
+      const auditHash = await this.sha256Hex(`${this.aiDraftNote.trim()}${timestamp}NP Reviewer`);
+      this.appendLogEntry(this.activePatient, minutes, this.aiDraftNote.trim(), auditHash);
+      if (!this.activePatient.auditLog) this.activePatient.auditLog = [];
+      this.activePatient.auditLog.unshift({ timestamp: `${this.activePatient.lastContact} — 10:30 AM`, type: 'NP NARRATIVE APPROVED', typeBadge: 'bg-purple-700', description: 'NP approved AI-drafted narrative and logged RTM encounter minutes.', hashId: `SHA:${auditHash}`, icon: '🩺' });
+      if (this.activePatient.npMinutesLogged >= this.activePatient.npMinutesTarget) this.activePatient.billingStatus = 'READY_TO_BILL';
+      this.aiDraftMinutes = 0;
+      this.encounterApproved = true;
+      this.notify(`✅ Narrative approved and logged. Hash: ${auditHash.slice(0,12)}...`);
+      this.showPatientPanel = false;
+      this.page = 'clinical';
+      this.stopClinicalTimer();
+    },
+    addNarrative() {
+      if (!this.activePatient || !this.newLog.trim()) { this.notify('Add a narrative note before logging.'); return; }
+      this.appendLogEntry(this.activePatient, this.newMinutes || 0, this.newLog.trim());
+      this.newLog = '';
+      this.newMinutes = 5;
+      this.notify('Narrative entry sealed and verified.');
+    },
+    async sha256Hex(message) {
+      const buf = new TextEncoder().encode(message);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    },
+    async buildTwilioAuditLog(patient) {
+      if (!patient) { this.twilioAuditLog = []; return; }
+      const sms = (patient.smsLogs||[]).map(e => ({ timestamp: e.timestamp, channel: 'SMS', detail: e.detail, source: `${patient.id}-sms-${e.timestamp}` }));
+      const ivr = (patient.ivrLogs||[]).map(e => ({ timestamp: e.timestamp, channel: 'Voice/IVR', detail: e.detail, source: `${patient.id}-ivr-${e.timestamp}` }));
+      const combined = [...sms,...ivr];
+      const hashes = await Promise.all(combined.map(item => this.sha256Hex(`${item.source}-${item.channel}`)));
+      this.twilioAuditLog = combined.map((item,i) => ({ ...item, hash: `SHA:${hashes[i].slice(0,20)}...` }));
+    },
+    truncateHash(h) { return h ? (h.length > 28 ? `${h.slice(0,28)}...` : h) : ''; },
+    parseAuditTimestamp(ts) { if (!ts) return 0; const p = Date.parse(ts.replace('—','').replace(/\s+/g,' ').trim()); return isNaN(p) ? 0 : p; },
+    auditLogEntries(patient) {
+      if (!patient?.auditLog) return [];
+      return [...patient.auditLog].sort((a,b) => this.parseAuditTimestamp(b.timestamp) - this.parseAuditTimestamp(a.timestamp));
+    },
+    generateAuditLog(patient) {
+      const base = [
+        { timestamp: `${patient.consentDate} — 09:14 AM`, type: 'CONSENT', typeBadge: 'bg-blue-700', description: 'Patient replied AGREE to RTM enrollment SMS. Consent logged.', hashId: `SHA:${patient.consentTwilioSid}`, icon: '🔐' },
+        { timestamp: `${patient.consentDate} — 09:14 AM`, type: '98975 BILLED', typeBadge: 'bg-green-700', description: 'CPT 98975 triggered — Setup & Education. Amount: $19.65 billed to Medicare.', hashId: `SHA:98975-${patient.id}-${patient.enrollmentDate.replace(/\s/g,'')}`, icon: '💰' }
+      ];
+      const delivery = patient.deliveryVerified ? [{ timestamp: patient.deliveryTimestamp, type: 'DELIVERY', typeBadge: 'bg-teal-700', description: `Hand-to-Hand Verified. GPS: ${patient.deliveryGps}. RxSafe Batch: ${patient.rxsafeBatchId}.`, hashId: `SHA:GPS-${patient.deviceId}-${patient.rxsafeBatchId}`, icon: '📦' }] : [];
+      const smsLogs = Array.from({ length: patient.adherenceDays }, (_,i) => ({ timestamp: `Feb ${(i+2).toString().padStart(2,'0')}, 2026 — 09:00 AM`, type: 'SMS LOG', typeBadge: 'bg-blue-900', description: 'Daily adherence ping sent. Patient replied: TAKEN. Twilio SID logged.', hashId: `SHA:SMS-${patient.id}-DAY${i+1}`, icon: '📱' }));
+      const npLogs = patient.npMinutesLogged > 0 ? [{ timestamp: `${patient.lastContact} — 10:30 AM`, type: 'NP SESSION', typeBadge: 'bg-purple-700', description: `NP reviewed chart. Session time: ${patient.npMinutesLogged} min logged toward 98980.`, hashId: `SHA:NP-${patient.id}-${patient.lastContact.replace(/\s/g,'')}`, icon: '🩺' }] : [];
+      const billingLogs = patient.billingStatus === 'READY_TO_BILL' ? [{ timestamp: 'Feb 20, 2026 — 08:00 AM', type: 'BILL READY', typeBadge: 'bg-green-600', description: 'All thresholds met. 98977 + 98980 flagged for billing.', hashId: `SHA:BILL-${patient.id}-FEB2026`, icon: '💰' }] : [];
+      return [...base,...delivery,...smsLogs,...npLogs,...billingLogs];
+    },
+
+    // ─── Delivery ─────────────────────────────────────────────
+    deliveryPatient() { return this.triagePatients.find(p => p.id === this.deliveryState.patientId); },
+    initDeliveryView() {
+      this.deliveryState.gpsStatus = 'loading';
+      this.deliveryState.coords = '';
+      this.deliveryState.confirmed = false;
+      navigator.geolocation.getCurrentPosition(
+        pos => { this.deliveryState.lat = pos.coords.latitude; this.deliveryState.lng = pos.coords.longitude; this.deliveryState.coords = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`; this.deliveryState.gpsStatus = 'ready'; },
+        () => { this.deliveryState.gpsStatus = 'error'; }
+      );
+    },
+    async confirmDelivery() {
+      if (this.deliveryState.confirmed) return;
+      const patient = this.deliveryPatient();
+      const timestamp = new Date().toISOString();
+      const hash = await this.sha256Hex(`${patient?.id||''}${patient?.rxsafeBatchId||''}${timestamp}`);
+      this.deliveryState.timestamp = timestamp;
+      this.deliveryState.hashId = hash;
+      this.deliveryState.confirmed = true;
+      if (patient) {
+        patient.deliveryVerified = true;
+        patient.deliveryTimestamp = new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' —');
+        patient.deliveryGps = this.deliveryState.coords;
+        patient.deliveryStatus = 'Completed';
+      }
+      const ledger = this.pharmacyPatients.find(p => p.id === patient?.id);
+      if (ledger) { ledger.gpsVerified = true; ledger.deliveryTimestamp = patient.deliveryTimestamp; ledger.deliveryStatus = 'Completed'; }
+    },
+    logisticsCredits() { return this.pharmacyPatients.filter(p => p.gpsVerified).length * this.finance.pharmacyReimbursementRate; },
+    deliverySummary() {
+      const s = { pending: 0, inTransit: 0, completed: 0 };
+      this.pharmacyPatients.forEach(p => { if (p.deliveryStatus === 'Completed' || p.gpsVerified) s.completed++; else if (p.deliveryStatus === 'In Transit') s.inTransit++; else s.pending++; });
+      return s;
+    },
+    deliveryStatusBadge(patient) {
+      const s = patient?.deliveryStatus || (patient?.gpsVerified ? 'Completed' : 'Pending');
+      if (s === 'Completed' || patient?.gpsVerified) return { label: 'Completed', class: 'bg-emerald-50 text-emerald-700 border border-emerald-100' };
+      if (s === 'In Transit') return { label: 'In Transit', class: 'bg-blue-50 text-blue-700 border border-blue-100' };
+      return { label: 'Pending', class: 'bg-slate-100 text-slate-500 border border-slate-200' };
+    },
+    launchDeliveryVerification(patient) {
+      if (!patient) return;
+      if (!patient.gpsVerified && patient.deliveryStatus === 'Pending') patient.deliveryStatus = 'In Transit';
+      this.deliveryState.patientId = patient.id;
+      this.page = 'delivery';
+      this.initDeliveryView();
+    },
+
+    // ─── Enrollment ───────────────────────────────────────────
+    nextConsent() { if (this.enrollForm.step < this.consentSteps.length - 1) this.enrollForm.step++; },
+    prevConsent() { if (this.enrollForm.step > 0) this.enrollForm.step--; },
+    submitEnrollment() {
+      if (!this.enrollForm.name.trim() || !this.enrollForm.diagnosis.trim() || !this.enrollForm.coinsuranceStatus) { this.notify('Enter name, diagnosis, and insurance type before activation.'); return; }
+      const id = `PT-${Date.now()}`;
+      const rxBatch = `RXSF-2026-${Math.floor(Math.random()*90000)+10000}-FEB`;
+      const today = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      const newPatient = {
+        id, name: this.enrollForm.name, dob: '01/01/1955', age: 71,
+        address: 'Pending address verification', phone: '555-0100',
+        diagnosis: this.enrollForm.diagnosis, icd10: 'TBD',
+        medications: ['Pending reconciliation'], pharmacyNpi: '1234567890',
+        deviceId: `RX-${Math.floor(Math.random()*90000)+10000}`, rxsafeBatchId: rxBatch,
+        riskStatus: 'YELLOW', adherenceDays: 0, adherenceTarget: 16, missedDoses: 0,
+        lastMissed: null, symptomKeywords: [],
+        systolicBp: [120,121,120,121,120,121,120], diastolicBp: [80,79,80,81,80,79,80], weight: [160,160,160,160,160,160,160],
+        deliveryVerified: false, deliveryTimestamp: 'Pending', deliveryGps: 'Pending',
+        consentDate: today, consentTwilioSid: `SM${Math.floor(Math.random()*1e12)}`, enrollmentDate: today,
+        npMinutesLogged: 0, npMinutesTarget: 20, billingStatus: '98977_PENDING',
+        lifecycleStage: ['consent'], coinsuranceStatus: this.enrollForm.coinsuranceStatus,
+        lastContact: 'just now', monitoring: 'SMS',
+        disenrolled: false, disenrollReason: '', disenrollDate: '', disenrollNotes: '',
+        smsLogs: [{ id: 1, timestamp: `${today} — 10:20 AM`, channel: 'SMS', detail: 'Twilio SMS enrollment confirmation sent.' }],
+        ivrLogs: [{ id: 1, timestamp: `${today} — 10:22 AM`, channel: 'IVR', detail: 'Call Successful - Key 1 Pressed' }],
+        manualCommLogs: [], narrativeLogs: [], auditLog: []
+      };
+      newPatient.auditLog = this.generateAuditLog(newPatient);
+      this.triagePatients.unshift(newPatient);
+      this.pharmacyPatients.unshift({ id, name: newPatient.name, diagnosis: newPatient.diagnosis, gpsVerified: false, rxSafeBatch: rxBatch, deliveryTimestamp: newPatient.deliveryTimestamp, deliveryGps: newPatient.deliveryGps, deliveryStatus: 'Pending' });
+      this.setTriagePage(1);
+      this.auditTrail.unshift({ batchId: rxBatch, monitoringId: `Monitor-${this.enrollForm.name.split(' ')[0].toUpperCase()}-${Math.floor(Math.random()*9000)}` });
+      this.notify('Enrollment captured with consent flow sealed.');
+      this.closeEnroll();
+    },
+    closeEnroll() { this.showEnrollModal = false; this.enrollForm = { name: '', diagnosis: '', coinsuranceStatus: '', step: 0 }; },
+
+    // ─── Bulk Upload ──────────────────────────────────────────
+    openBulkModal() { this.showBulkModal = true; this.bulkUpload.mappingConfirmed = false; },
+    closeBulkModal() { this.showBulkModal = false; this.bulkUpload.mappingConfirmed = false; },
+    handleBulkDrop(event) { const f = event.dataTransfer.files[0]; if (f) this.processBulkFile(f); },
+    handleBulkFile(event) { const f = event.target.files[0]; if (f) this.processBulkFile(f); },
+    processBulkFile(file) {
+      this.bulkUpload.fileName = file.name;
+      this.bulkUpload.progress = 20;
+      this.bulkUpload.mappingConfirmed = false;
+      this.bulkUpload.validated = false;
+      this.bulkUpload.validationSummary = { eligible: 0, ineligible: 0 };
+      if (file.name.toLowerCase().endsWith('.csv') || file.type.includes('csv')) {
+        const reader = new FileReader();
+        reader.onload = e => { this.parseCsvText(e.target.result || ''); this.autoMapHeaders(this.bulkUpload.headers); this.buildBulkPreview(); this.bulkUpload.progress = 45; };
+        reader.readAsText(file);
+      } else { this.simulateBulkData(); this.autoMapHeaders(this.bulkUpload.headers); this.buildBulkPreview(); this.bulkUpload.progress = 45; }
+    },
+    parseCsvText(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (!lines.length) { this.notify('No rows detected in CSV.'); return; }
+      const headers = this.parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+      const rows = lines.slice(1).map((line, i) => { const vals = this.parseCsvLine(line); const row = { __id: i+1 }; headers.forEach((h,j) => { row[h] = (vals[j]||'').trim(); }); return row; });
+      this.bulkUpload.headers = headers;
+      this.bulkUpload.rows = rows;
+      this.bulkUpload.mappingConfirmed = false;
+      this.buildBulkPreview();
+    },
+    parseCsvLine(line) {
+      const result = []; let current = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (inQuotes && line[i+1] === '"') { current += '"'; i++; } else { inQuotes = !inQuotes; } continue; }
+        if (c === ',' && !inQuotes) { result.push(current); current = ''; continue; }
+        current += c;
+      }
+      result.push(current); return result;
+    },
+    normalizeHeader(v) { return (v||'').toLowerCase().replace(/[^a-z0-9]/g,''); },
+    scoreHeaderMatch(header, synonyms) {
+      const n = this.normalizeHeader(header); let score = 0;
+      synonyms.forEach(s => { const sn = this.normalizeHeader(s); if (!sn) return; if (n===sn) score=Math.max(score,100); else if (n.startsWith(sn)) score=Math.max(score,90); else if (n.includes(sn)) score=Math.max(score,80); else if (sn.includes(n)) score=Math.max(score,70); });
+      return score;
+    },
+    autoMapHeaders(headers) {
+      const fields = { patientName: ['patient_full_name','patient name','full name','name','member name'], dob: ['date_of_birth','dob','birth date','date of birth'], icd10: ['primary_diagnosis_code','icd10','icd-10','diagnosis code'], pharmacyId: ['pharmacy_npi_id','pharmacy npi','npi','pharmacy id'], deviceId: ['monitoring_device_id','device id','monitoring id','device'] };
+      const mapping = {};
+      Object.keys(fields).forEach(key => {
+        const scores = headers.map(h => ({ header: h, score: this.scoreHeaderMatch(h, fields[key]) })).sort((a,b) => b.score-a.score);
+        mapping[key] = scores[0]?.score >= 70 ? scores[0].header : '';
+      });
+      this.bulkUpload.mapping = { ...this.bulkUpload.mapping, ...mapping };
+    },
+    getMappedValue(row, key) { const h = this.bulkUpload.mapping[key]; return h ? (row[h]||'') : ''; },
+    confirmBulkMapping() {
+      this.buildBulkPreview();
+      if (this.bulkUpload.missingHeaders.length) { this.notify('Resolve missing mappings before confirmation.'); return; }
+      this.bulkUpload.mappingConfirmed = true;
+      this.bulkUpload.progress = Math.max(this.bulkUpload.progress, 65);
+      this.notify('Mapping confirmed. Ready to validate.');
+    },
+    buildBulkPreview() {
+      const required = ['patient_full_name','date_of_birth','primary_diagnosis_code','pharmacy_npi_id','monitoring_device_id'];
+      const m = this.bulkUpload.mapping;
+      const missing = [];
+      if (!m.patientName) missing.push('patient_full_name');
+      if (!m.dob) missing.push('date_of_birth');
+      if (!m.icd10) missing.push('primary_diagnosis_code');
+      if (!m.pharmacyId) missing.push('pharmacy_npi_id');
+      if (!m.deviceId) missing.push('monitoring_device_id');
+      this.bulkUpload.missingHeaders = missing.length ? missing : required.filter(h => !this.bulkUpload.headers.includes(h));
+      this.bulkUpload.previewRows = this.bulkUpload.rows.slice(0,3).map(row => {
+        const icd10 = this.getMappedValue(row,'icd10');
+        return { id: row.__id, patientName: this.getMappedValue(row,'patientName')||'—', dob: this.getMappedValue(row,'dob')||'—', pharmacyId: this.getMappedValue(row,'pharmacyId')||'—', icd10: icd10||'Missing', status: icd10 ? 'Eligible' : 'Ineligible for RTM' };
+      });
+      this.bulkUpload.validated = false;
+      this.bulkUpload.validationSummary = { eligible: 0, ineligible: 0 };
+      this.bulkUpload.progress = 55;
+    },
+    validateBulkData() {
+      if (!this.bulkUpload.rows.length) { this.notify('Upload a file before validation.'); return; }
+      if (!this.bulkUpload.mappingConfirmed) { this.notify('Confirm column mapping before validation.'); return; }
+      let eligible = 0, ineligible = 0;
+      this.bulkUpload.rows.forEach(row => { this.getMappedValue(row,'icd10').trim() ? eligible++ : ineligible++; });
+      this.bulkUpload.validationSummary = { eligible, ineligible };
+      this.bulkUpload.previewRows = this.bulkUpload.previewRows.map(row => ({ ...row, status: row.icd10 && row.icd10 !== 'Missing' ? 'Eligible' : 'Ineligible for RTM' }));
+      this.bulkUpload.validated = true;
+      this.bulkUpload.progress = 100;
+      this.notify('Validation complete. Ineligible rows flagged.');
+    },
+    submitBulkIntake() {
+      if (!this.bulkUpload.mappingConfirmed || !this.bulkUpload.validated || this.bulkUpload.missingHeaders.length) { this.notify('Resolve validation and header mapping before submission.'); return; }
+      this.addBulkPatients(Math.min(10, this.bulkUpload.rows.length || 10));
+      this.notify('Bulk intake sealed in immutable ledger.');
+      this.closeBulkModal();
+    },
+    addBulkPatients(count) {
+      const patients = this.generateBulkPatients(count);
+      this.triagePatients = [...patients,...this.triagePatients];
+      this.pharmacyPatients = [...patients.map(p => ({ id: p.id, name: p.name, diagnosis: p.diagnosis, gpsVerified: p.deliveryVerified, rxSafeBatch: p.rxsafeBatchId, deliveryTimestamp: p.deliveryTimestamp, deliveryGps: p.deliveryGps, deliveryStatus: p.deliveryVerified ? 'Completed' : 'Pending' })),...this.pharmacyPatients];
+      this.setTriagePage(1);
+    },
+    generateBulkPatients(count) {
+      const firstNames = ['Tessa','Grant','Imani','Rafael','Selene','Omar','Ivy','Derek','Noa','Camila','Jalen','Rosie'];
+      const lastNames = ['Carter','Lopez','Nguyen','Hughes','Patel','Morgan','Haddad','Kim','Garcia','Price','Sato','Bishop'];
+      const meds = ['Metoprolol 25mg','Glipizide 5mg','Losartan 50mg','Eliquis 5mg','Warfarin 5mg','Amlodipine 5mg'];
+      const symptomsPool = ['N/A','NAUSEA','FATIGUE','DIZZY','HEADACHE'];
+      const streets = ['Maple','Oak','Willow','Pine','Cedar','Harbor','Ridge','Meadow','Sunset','Park'];
+      const cities = ['Seattle, WA','Dallas, TX','Miami, FL','Chicago, IL','Denver, CO','Phoenix, AZ','Boston, MA','Atlanta, GA'];
+      const areaCodes = ['206','214','305','312','303','602','617','404'];
+      return Array.from({ length: count }, (_,idx) => {
+        const adhDays = Math.floor(Math.random()*16)+1;
+        const symptom = symptomsPool[Math.floor(Math.random()*symptomsPool.length)];
+        const first = firstNames[(idx+Math.floor(Math.random()*firstNames.length))%firstNames.length];
+        const last = lastNames[(idx+Math.floor(Math.random()*lastNames.length))%lastNames.length];
+        const minutes = Math.floor(Math.random()*26);
+        const baseBp = 118+Math.floor(Math.random()*26), baseDia = 76+Math.floor(Math.random()*16), baseW = 140+Math.floor(Math.random()*70);
+        const dobYear = 1948+Math.floor(Math.random()*40);
+        const rxBatch = `RXSF-2026-${Math.floor(Math.random()*90000)+10000}-FEB`;
+        return {
+          id: `PT-${Date.now()+idx}`, name: `${first} ${last}`,
+          dob: `${String(Math.floor(Math.random()*12)+1).padStart(2,'0')}/${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}/${dobYear}`,
+          age: 2026-dobYear,
+          address: `${100+Math.floor(Math.random()*800)} ${streets[Math.floor(Math.random()*streets.length)]} St, ${cities[Math.floor(Math.random()*cities.length)]}`,
+          phone: `${areaCodes[Math.floor(Math.random()*areaCodes.length)]}-555-${Math.floor(1000+Math.random()*9000)}`,
+          diagnosis: 'Hypertension (I10)', icd10: 'I10',
+          medications: [meds[Math.floor(Math.random()*meds.length)]],
+          pharmacyNpi: '1234567890', deviceId: `RX-${Math.floor(Math.random()*90000)+10000}`, rxsafeBatchId: rxBatch,
+          riskStatus: adhDays >= 16 ? 'GREEN' : (adhDays >= 12 ? 'YELLOW' : 'RED'),
+          adherenceDays: adhDays, adherenceTarget: 16, missedDoses: Math.max(0,Math.floor(Math.random()*4)-1),
+          lastMissed: adhDays < 16 ? 'Feb 19, 2026' : null,
+          symptomKeywords: symptom === 'N/A' ? [] : [symptom],
+          systolicBp: [baseBp-2,baseBp-1,baseBp,baseBp+1,baseBp-1,baseBp+2,baseBp+1],
+          diastolicBp: [baseDia-1,baseDia,baseDia-1,baseDia+1,baseDia,baseDia+1,baseDia],
+          weight: [baseW,baseW,baseW+1,baseW+1,baseW+2,baseW+2,baseW+3],
+          deliveryVerified: Math.random() > 0.4,
+          deliveryTimestamp: `Feb 18, 2026 — ${String(8+Math.floor(Math.random()*10)).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}`,
+          deliveryGps: '34.0200° N, 118.4900° W',
+          consentDate: 'Feb 01, 2026', consentTwilioSid: `SM${Math.floor(Math.random()*1e12)}`, enrollmentDate: 'Feb 01, 2026',
+          npMinutesLogged: minutes, npMinutesTarget: 20,
+          billingStatus: minutes >= 20 ? 'READY_TO_BILL' : '98977_PENDING',
+          lifecycleStage: ['consent','delivered','monitoring'],
+          coinsuranceStatus: 'MEDIGAP — $0 copay', lastContact: 'Feb 19, 2026',
+          monitoring: Math.random() > 0.5 ? 'SMS' : 'Voice/IVR',
+          disenrolled: false, disenrollReason: '', disenrollDate: '', disenrollNotes: '',
+          smsLogs: [{ id: Date.now()+idx+10, timestamp: '2026-02-19 08:18', channel: 'SMS', detail: 'Twilio SMS check-in delivered.' }],
+          ivrLogs: [{ id: Date.now()+idx+20, timestamp: '2026-02-19 08:24', channel: 'IVR', detail: 'Call Successful - Key 1 Pressed' }],
+          manualCommLogs: [],
+          narrativeLogs: minutes ? [{ id: Date.now()+idx+1, timestamp: '2026-02-19 08:30', minutes, note: 'Auto-imported outreach log.', hashed: true, auditHash: '' }] : [],
+          auditLog: []
+        };
+      });
+    },
+    simulateBulkData() {
+      this.bulkUpload.headers = ['patient_full_name','date_of_birth','primary_diagnosis_code','pharmacy_npi_id','monitoring_device_id'];
+      this.bulkUpload.rows = [
+        { __id:1, patient_full_name:'Tessa Carter', date_of_birth:'1978-03-12', primary_diagnosis_code:'I50.9', pharmacy_npi_id:'1457392210', monitoring_device_id:'MD-7781' },
+        { __id:2, patient_full_name:'Grant Lopez', date_of_birth:'1964-08-22', primary_diagnosis_code:'I10', pharmacy_npi_id:'1429013370', monitoring_device_id:'MD-9910' },
+        { __id:3, patient_full_name:'Imani Nguyen', date_of_birth:'1982-11-05', primary_diagnosis_code:'J44.9', pharmacy_npi_id:'1699210441', monitoring_device_id:'MD-4402' },
+        { __id:4, patient_full_name:'Rafael Hughes', date_of_birth:'1972-01-19', primary_diagnosis_code:'E11.9', pharmacy_npi_id:'1612339890', monitoring_device_id:'MD-4521' },
+        { __id:5, patient_full_name:'Selene Patel', date_of_birth:'1969-06-14', primary_diagnosis_code:'I48.91', pharmacy_npi_id:'1447011291', monitoring_device_id:'MD-6082' }
+      ];
+    },
+
+    // ─── Compliance Bundle ────────────────────────────────────
+    eligible98977Count() { return this.triagePatients.filter(p => p.adherenceDays >= 16).length; },
+    eligible98980Count() { return this.triagePatients.filter(p => this.billingReady(p)).length; },
+    eligibleSafetyNetCount() { return this.triagePatients.filter(p => p.adherenceDays < 16 && p.adherenceDays >= 8).length; },
+    complianceBundleMetrics() { return { code98977: this.eligible98977Count(), code98980: this.eligible98980Count(), code98985: this.eligibleSafetyNetCount() }; },
+    complianceBundleLines() {
+      const m = this.complianceBundleMetrics();
+      return ['QCRx 2026 Compliance Bundle', `Generated: ${new Date().toISOString().slice(0,10)}`, '', 'Total billable units:', `98977 Device Supply: ${m.code98977}`, `98980 Management: ${m.code98980}`, `98985/98979 Safety-Net: ${m.code98985}`];
+    },
+    escapePdfText(v) { return v.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)'); },
+    buildCompliancePdf(lines) {
+      const safe = lines.map(l => this.escapePdfText(l));
+      const textRows = safe.map((l,i) => `1 0 0 1 72 ${742 - i*18} Tm (${l}) Tj`).join('\n');
+      const content = `BT\n/F1 12 Tf\n${textRows}\nET`;
+      const objects = [
+        '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+        '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+        '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
+        '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
+        `5 0 obj << /Length ${content.length} >> stream\n${content}\nendstream endobj`
+      ];
+      let pdf = '%PDF-1.4\n';
+      const offsets = [0];
+      objects.forEach(obj => { offsets.push(pdf.length); pdf += `${obj}\n`; });
+      const xrefOffset = pdf.length;
+      pdf += `xref\n0 ${objects.length+1}\n0000000000 65535 f \n`;
+      for (let i = 1; i <= objects.length; i++) pdf += `${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
+      pdf += `trailer << /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+      return pdf;
+    },
+    downloadComplianceBundle() {
+      const blob = new Blob([this.buildCompliancePdf(this.complianceBundleLines())], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = 'QCRx-2026-Compliance-Bundle.pdf';
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      this.notify('Compliance bundle downloaded.');
+    },
+
+    // ─── Tour ─────────────────────────────────────────────────
+    currentTourSteps() {
+      if (this.tourPersona === 'clinical') return [
+        { id: 'triage-queue', title: 'Triage Queue', text: 'Review risk-ranked patients and open AI-assisted encounters.' },
+        { id: 'risk-badges', title: 'Risk Badges', text: 'Scan RED/YELLOW/GREEN tiers to prioritize outreach.' },
+        { id: 'billing-readiness', title: 'Billing Readiness', text: 'Track who has met RTM minute thresholds for 98980.' },
+        { id: 'audit-vault', title: 'Audit Vault', text: 'Immutable logs seal consent, deliveries, and clinical actions.' },
+        { id: 'load-demo-button', title: 'Load Demo Patients', text: 'Seed a realistic queue for demos and walkthroughs.' }
+      ];
+      if (this.tourPersona === 'pharmacy') return [
+        { id: 'pharmacy-ledger', title: 'Active Deliveries', text: 'Monitor today\'s delivery pipeline and counts.' },
+        { id: 'logistics-ledger', title: 'Logistics Ledger', text: 'Track monthly GPS delivery credits.' },
+        { id: 'bulk-intake', title: 'Bulk Intake', text: 'Upload and map patient rosters for enrollment.' },
+        { id: 'batch-cms-export', title: 'Batch CMS 1500', text: 'Generate and download billing-ready CSV exports.' },
+        { id: 'gps-verify-button', title: 'GPS Verify', text: 'Launch hand-to-hand GPS verification per delivery.' }
+      ];
+      if (this.tourPersona === 'finance') return [
+        { id: 'finance-modeler', title: 'Revenue Sliders', text: 'Adjust growth and cost assumptions in real time.' },
+        { id: 'finance-output', title: 'Output Cards', text: 'Review revenue stack and live projections.' },
+        { id: 'finance-chart', title: '24-Month Chart', text: 'Review the cumulative revenue curve.' },
+        { id: 'actuals-overlay', title: 'Actuals Overlay', text: 'Toggle Model vs. Actuals to see enrollment variance.' },
+        { id: 'finance-download', title: 'Download Compliance Bundle', text: 'Export billing compliance summaries.' }
+      ];
+      return [];
+    },
+    currentTourStep() { return this.currentTourSteps()[this.tourStepIndex] || { id: '', title: '', text: '' }; },
+    updateTourPosition() {
+      const step = this.currentTourStep();
+      const el = document.getElementById(step.id);
+      if (!el) { this.tourStyle = 'top: 20px; left: 20px;'; this.tourHighlight = ''; return; }
+      const rect = el.getBoundingClientRect();
+      const left = Math.min(Math.max(16, rect.left), window.innerWidth - 296);
+      const top = Math.min(rect.bottom + 12, window.innerHeight - 160);
+      this.tourStyle = `top: ${top}px; left: ${left}px;`;
+      this.tourHighlight = step.id;
+    },
+    startTour(persona) { this.tourPersona = persona; this.tourStepIndex = 0; this.tourActive = true; this.$nextTick(() => this.updateTourPosition()); },
+    nextTourStep() { if (this.tourStepIndex + 1 >= this.currentTourSteps().length) { this.endTour(); return; } this.tourStepIndex++; this.$nextTick(() => this.updateTourPosition()); },
+    skipTour() { this.endTour(); },
+    endTour() { if (this.tourPersona) localStorage.setItem(`qcrxTourDone-${this.tourPersona}`, 'true'); this.tourActive = false; this.tourHighlight = ''; },
+    maybeStartTour(persona) { if (this.isLoading || !['clinical','pharmacy','finance'].includes(persona)) return; if (!localStorage.getItem(`qcrxTourDone-${persona}`)) this.startTour(persona); },
+    onPersonaChange(persona) { if (this.tourActive) { this.tourActive = false; this.tourHighlight = ''; } this.maybeStartTour(persona); },
+    switchPersona(target) { if (!target || !this.confirmLeaveEncounter()) return; this.showClinicalDrawer = false; this.page = target; this.onPersonaChange(target); },
+
+    // ─── Theme / Session ──────────────────────────────────────
+    initThemePreference() {
+      const saved = localStorage.getItem('qcrxTheme');
+      this.themePreference = saved || 'system';
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.isDark = this.themePreference === 'dark' || (this.themePreference === 'system' && prefersDark);
+      this.applyTheme();
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => { if (this.themePreference === 'system') { this.isDark = e.matches; this.applyTheme(); } });
+    },
+    applyTheme() { document.documentElement.classList.toggle('dark', this.isDark); },
+    toggleTheme() { this.isDark = !this.isDark; this.themePreference = this.isDark ? 'dark' : 'light'; localStorage.setItem('qcrxTheme', this.themePreference); this.applyTheme(); },
+    setupInactivityTimer() {
+      const reset = this.resetInactivityTimer.bind(this);
+      ['mousemove','mousedown','keydown','scroll','touchstart'].forEach(e => window.addEventListener(e, reset, { passive: true }));
+      this.resetInactivityTimer();
+    },
+    confirmLeaveEncounter() { if (!this.showPatientPanel || this.encounterApproved || this.timerSeconds === 0) return true; return window.confirm('Unsaved session time will be lost'); },
+    resetInactivityTimer() { if (this.inactivityTimer) clearTimeout(this.inactivityTimer); this.inactivityTimer = setTimeout(() => this.handleInactivityTimeout(), this.inactivityTimeoutMs); },
+    handleInactivityTimeout() { this.goToLogin(true); this.notify('Session timed out after 15 minutes of inactivity.'); },
+    goToLogin(resetPatient = false) {
+      if (!this.confirmLeaveEncounter()) return;
+      this.page = 'login'; this.showClinicalDrawer = false; this.tourActive = false; this.tourHighlight = '';
+      this.showEnrollModal = false; this.showBulkModal = false; this.showPatientPanel = false;
+      this.showInbox = false; this.showDisenrollModal = false; this.showBatchPreview = false;
+      if (resetPatient) this.activePatient = null;
+      this.stopClinicalTimer();
+    },
+
+    // ─── Utilities ────────────────────────────────────────────
+    formatCurrency(value) { return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+    notify(message) { this.notification = message; setTimeout(() => (this.notification = ''), 2800); }
+  };
+}
+
+  </script>
+</body>
+</html>
